@@ -15,8 +15,8 @@ namespace server.data
         {
         }
 
-        public DbSet<NATPosts> Posts = null!;
-        public DbSet<NATContent> Contents = null!;
-        public DbSet<NATSimulation> Diagrams = null!;
+        public DbSet<NATPosts> Posts { get; set; } = null!;
+        public DbSet<NATContent> Contents { get; set; } = null!;
+        public DbSet<NATSimulation> Diagrams { get; set; } = null!;
     }
 }

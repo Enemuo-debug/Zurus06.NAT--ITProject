@@ -28,8 +28,8 @@ namespace server.tools
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken
             (
-                issuer: "your-app",
-                audience: "your-app",
+                issuer: config["Jwt:Issuer"],
+                audience: config["Jwt:Audience"],
                 claims: claims,
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds

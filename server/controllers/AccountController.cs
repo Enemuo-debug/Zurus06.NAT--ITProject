@@ -71,8 +71,20 @@ namespace server.controllers
             var result = await signInManager.CheckPasswordSignInAsync(user, loginForm.Password, false);
             if (result.Succeeded)
             {
+                // Generate JWT token
                 string token = jWtToken.CreateToken(user);
-                return Ok(new { message = "Login Successful", token });
+                
+                // Create a cookie with the JWT
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.Now.AddDays(1)
+                };
+
+                Response.Cookies.Append("NAT-Authentication", token, cookieOptions);
+                return Ok(new { message = "Login Successful" });
             }
             return Unauthorized("Incorrect username or password");
         }
