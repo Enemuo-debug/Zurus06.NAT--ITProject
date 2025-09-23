@@ -1,0 +1,49 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using server.dtos;
+using server.Interfaces;
+using server.NATModels;
+using server.tools;
+
+namespace server.MappersAndExtensions
+{
+    public static class ContentExtensions
+    {
+        public static NewContentDto EncryptContentDto(this NewContentDto contentDto)
+        {
+            contentDto.Content = Cipher.HillCipherEncrypt(contentDto.Content);
+            return contentDto;
+        }
+
+        public static async Task<OutputContentGroup> DecryptContentDto(this NATContent contentDto, ISimulation nS = null)
+        {
+            switch (contentDto.type)
+            {
+                case ContentTypes.Text:
+                    return new TextContent
+                    {
+                        Id = contentDto.Id,
+                        Content = Cipher.HillCipherDecrypt(contentDto.Content)
+                    };
+                case ContentTypes.Image:
+                    return new ImageContent
+                    {
+                        Id = contentDto.Id,
+                        ImgLink = contentDto.ImgLink,
+                        Content = Cipher.HillCipherDecrypt(contentDto.Content)
+                    };
+                    throw new FormatException("Invalid content format for Image type.");
+                case ContentTypes.NATSimulation:
+                    return new NetContent
+                    {
+                        Id = contentDto.Id,
+                        NATSimulation = await nS.GetSimulationById(contentDto.NATSimulationId)
+                    };
+                default:
+                    throw new NotSupportedException($"Content type doesn't exist.");
+            }
+        }
+    }
+}

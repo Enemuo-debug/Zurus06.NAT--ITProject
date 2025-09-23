@@ -9,6 +9,9 @@ using server.NATModels;
 using server.tools;
 using server.Interfaces;
 using server.Repositories;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
+using server.dtos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,12 +31,43 @@ builder.Services.AddIdentityCore<NATUser>(options =>
 .AddSignInManager()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.WriteIndented = true;
+        options.JsonSerializerOptions.TypeInfoResolverChain.Insert(0, 
+            new DefaultJsonTypeInfoResolver
+            {
+                Modifiers =
+                {
+                    typeInfo =>
+                    {
+                        if (typeInfo.Type == typeof(OutputContentGroup))
+                        {
+                            typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
+                            {
+                                TypeDiscriminatorPropertyName = "$type",
+                                IgnoreUnrecognizedTypeDiscriminators = true,
+                                UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToBaseType
+                            };
+
+                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
+                                new JsonDerivedType(typeof(TextContent), "text"));
+                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
+                                new JsonDerivedType(typeof(ImageContent), "image"));
+                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
+                                new JsonDerivedType(typeof(NetContent), "net"));
+                        }
+                    }
+                }
+            });
+    });
+
+
 builder.Services.AddControllers();
 builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<EmailCodeVerification>();
-builder.Services.AddScoped<NicheFunctions>();
-builder.Services.AddScoped<ContentTypeFunctions>();
 builder.Services.AddScoped<JWTToken>();
 builder.Services.AddScoped<IPosts, PostsRepo>();
 builder.Services.AddScoped<IContent, ContentRepo>();

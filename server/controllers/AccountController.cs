@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using server.dtos;
 using server.NATModels;
 using server.tools;
+using server.MappersAndExtensions;
+using server.Interfaces;
 
 namespace server.controllers
 {
@@ -20,7 +22,8 @@ namespace server.controllers
         private readonly UserManager<NATUser> userManager;
         private readonly IConfiguration config;
         private readonly JWTToken jWtToken;
-        public AccountController(EmailService _emailService, EmailCodeVerification _ecv, SignInManager<NATUser> _signInManager, UserManager<NATUser> _userManager, IConfiguration _config, JWTToken _token)
+        private readonly IPosts postsRepo;
+        public AccountController(EmailService _emailService, EmailCodeVerification _ecv, SignInManager<NATUser> _signInManager, UserManager<NATUser> _userManager, IConfiguration _config, JWTToken _token, IPosts _postsRepo)
         {
             emailService = _emailService;
             ecv = _ecv;
@@ -28,6 +31,7 @@ namespace server.controllers
             userManager = _userManager;
             config = _config;
             jWtToken = _token;
+            postsRepo = _postsRepo;
         }
 
         [HttpPost("email-verify")]
@@ -52,7 +56,7 @@ namespace server.controllers
                 Email = createAccountDto.EmailAddress,
                 Bio = createAccountDto.Bio,
                 DisplayName = createAccountDto.DisplayName,
-                niche = NicheFunctions.MapNiche(createAccountDto.Niche)
+                niche = (Niche) createAccountDto.Niche
             };
             var createdUser = await userManager.CreateAsync(newUser, createAccountDto.Password);
             if (createdUser.Succeeded) return Ok("New User has been created successfully");
@@ -73,7 +77,7 @@ namespace server.controllers
             {
                 // Generate JWT token
                 string token = jWtToken.CreateToken(user);
-                
+
                 // Create a cookie with the JWT
                 var cookieOptions = new CookieOptions
                 {
@@ -87,6 +91,28 @@ namespace server.controllers
                 return Ok(new { message = "Login Successful" });
             }
             return Unauthorized("Incorrect username or password");
+        }
+
+        // Get the User details
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserDetails([FromRoute] string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null) return NotFound("User not found");
+            return Ok(user.UserDetails());
+        }
+
+        // Get the current logged in user details
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUserDetails()
+        {
+            var email = User.GetUserEmail();
+            if (string.IsNullOrEmpty(email)) return Unauthorized("You are not logged in");
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null) return Unauthorized("User not found");
+            List<OutputPostDto> userPosts = await postsRepo.GetAllUsersPosts(user.Id);
+            UserDetailsDto userDetailsDto = JointMapper.MapToUserDetailsDto(user.UserDetails(), userPosts);
+            return Ok(userDetailsDto);
         }
     }
 }

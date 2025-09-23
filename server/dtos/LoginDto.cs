@@ -14,8 +14,5 @@ namespace server.dtos
         [Required]
         [DataType(DataType.Password, ErrorMessage = "Please try a more secure password")]
         public string Password { get; set; } = string.Empty;
-        [Required]
-        [Compare("Password", ErrorMessage = "Passwords do not match")]
-        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }
