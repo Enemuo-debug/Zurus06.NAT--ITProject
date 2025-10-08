@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Zurus06.NAT-Simulator</title>
+</head>
+<body>
+  <div class="Layout">
+    <!-- Left column -->
+    <aside class="LeftPanel">
+      <h2>Zurus06.NAT</h2>
+      <hr>
+
+      <section class="DeviceSection">
+        <h3>Devices: Drag object to Simulation Area and right click to remove from simulation area</h3>
+        <div class="deviceGrid">
+          <div class="device" data-device="PC" draggable="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M3 4h18v12H3zM2 18h20v2H2z"/>
+            </svg>
+            <h1>PC</h1>
+          </div>
+          <div class="device" data-device="Switch" draggable="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/>
+            </svg>
+            <h1>Switch</h1>
+          </div>
+          <div class="device" data-device="Router" draggable="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M12 2l8 4v12l-8 4-8-4V6z"/>
+            </svg>
+            <h1>Router</h1>
+          </div>
+          <div class="device" data-device="Server" draggable="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M2 6h20v12H2zM4 8v8h16V8z"/>
+            </svg>
+            <h1>Server</h1>
+          </div>
+        </div>
+      </section>
+
+      <!-- Description -->
+      <section class="Description">
+        <h3>Description</h3>
+        <p>Select a device to see details here.</p>
+      </section>
+
+      <section style="text-align: center;">
+      <h3 style="color: blanchedalmond; font-size: large;">OPERATIONS</h3>
+      <section class="operationsSection">
+        
+        <button class="operations" id="join">
+          <!-- Start Link Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5" cy="12" r="3"></circle>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+          Link Devices
+        </button>
+
+        <button class="operations">
+          <!-- Shortest Path Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3h10l-3 5 3 5H3z"></path>
+          </svg>
+          Shortest Path
+        </button>
+
+        <button class="operations">
+          <!-- Minimum Spanning Tree Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="4" r="2"></circle>
+            <circle cx="14" cy="4" r="2"></circle>
+            <circle cx="10" cy="12" r="2"></circle>
+            <line x1="6" y1="6" x2="10" y2="10"></line>
+            <line x1="14" y1="6" x2="10" y2="10"></line>
+          </svg>
+          Minimum Spanning Tree
+        </button>
+
+      </section>
+    </section>
+    
+      <!-- File Actions -->
+      <section class="FileSection">
+        <button>EXIT</button>
+        <button>SAVE</button>
+        <button class="danger">DELETE SIMULATION</button>
+      </section>
+    </aside>
+
+    <!-- Right column split into two rows -->
+    <div class="RightPanel">
+      <canvas class="SimulationArea"></canvas>
+      <section class="ConsoleArea">
+        <div class="console-header">
+          <span>Console Output</span>
+          <button id="clearlog">CLEAR LOG</button>
+        </div>
+        <div id="logOutput"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>

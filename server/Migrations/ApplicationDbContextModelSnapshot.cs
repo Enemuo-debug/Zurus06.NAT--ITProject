@@ -174,10 +174,14 @@ namespace server.Migrations
                     b.Property<int>("Link")
                         .HasColumnType("int");
 
-                    b.Property<int>("NATSimulationId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("linked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("simUUID")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -217,6 +221,30 @@ namespace server.Migrations
                     b.ToTable("Posts");
                 });
 
+            modelBuilder.Entity("server.NATModels.NATRequests", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Requests");
+                });
+
             modelBuilder.Entity("server.NATModels.NATSimulation", b =>
                 {
                     b.Property<int>("Id")
@@ -224,6 +252,18 @@ namespace server.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("devices")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("links")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

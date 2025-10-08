@@ -47,7 +47,7 @@ namespace server.Repositories
             if (content == null) return false;
             content.Content = Cipher.HillCipherEncrypt(updatedContent.Content);
             content.ImgLink = updatedContent.ImgLink;
-            content.NATSimulationId = updatedContent.NATSimulationId;
+            content.simUUID = updatedContent.simUUID;
             context.Contents.Update(content);
             if (save) await context.SaveChangesAsync();
             return true;

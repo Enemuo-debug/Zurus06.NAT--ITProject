@@ -1,116 +1,64 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
-using System.Numerics;
+using Microsoft.EntityFrameworkCore;
+using server.data;
+using server.NATModels;
 
 namespace server.tools
 {
     public class EmailCodeVerification
     {
         public readonly IConfiguration config;
-        public EmailCodeVerification(IConfiguration _config)
+        private readonly ApplicationDbContext ctx;
+        public EmailCodeVerification(IConfiguration _config, ApplicationDbContext context)
         {
             config = _config;
+            ctx = context;
         }
         private List<char> AllowedEmailLocalChars = new List<char>()
         {
-            // Letters
             'a','b','c','d','e','f','g','h','i','j','k','l','m',
             'n','o','p','q','r','s','t','u','v','w','x','y','z',
-
-            // Digits
-            '0','1','2','3','4','5','6','7','8','9',
-
-            // Special characters (commonly allowed)
-            '.','_','-','+'
         };
 
-        public string CreateCode(string emailAddress, bool fromAPI = false)
+        public async Task<string?> CreateCode(string emailAddress, int length = 5)
         {
-            string user = string.Join("", emailAddress.Split("@"));
-            string salt = "";
-            Random random = new();
-
-            for (int i = 0; i < 30; i++)
+            bool canRequest = ctx.Users.Any(u => u.Email == emailAddress) || ctx.Requests.Any(u => u.EmailAddress == emailAddress);
+            string code = string.Empty;
+            Console.WriteLine(canRequest);
+            Random random = new Random();
+            if (!canRequest)
             {
-                salt += AllowedEmailLocalChars[random.Next(AllowedEmailLocalChars.Count)];
-            }
-
-            string text = File.ReadAllText("cache.txt");
-
-            // Split into entries
-            List<string> parts = text.Split('@').ToList();
-
-            // Loop through and remove the matching one
-            for (int i = parts.Count - 1; i >= 0; i--)
-            {
-                if (fromAPI && parts[i].Split(':')[0] == user)
+                for (int i = 0; i < length; i++)
                 {
-                    salt = parts[i].Split(':')[1];
-                    break;
+                    code += AllowedEmailLocalChars[random.Next(AllowedEmailLocalChars.Count)];
                 }
-                if (parts[i].Split(':')[0] == user)
+                await ctx.Requests.AddAsync(new NATRequests
                 {
-                    parts.RemoveAt(i);
-                }
+                    EmailAddress = emailAddress,
+                    Code = code
+                });
+                await ctx.SaveChangesAsync();
             }
-            text = string.Join("@", parts);
-            File.WriteAllText("cache.txt", text);
-            if (!fromAPI) File.AppendAllText("cache.txt", $"{user}:{salt}@");
+            return code;
+        }
 
-            user += salt;
-            Console.WriteLine(user);
-
-            BigInteger code = 1;
-
-            foreach (char c in user)
+        public async Task<bool> VerifyCode(string emailAddress, string code)
+        {
+            bool output = false;
+            var request = await ctx.Requests.FirstOrDefaultAsync(r => r.EmailAddress == emailAddress && r.Code == code);
+            if (request != null)
             {
-                if (AllowedEmailLocalChars.Contains(char.ToLower(c)))
-                {
-                    int idx = AllowedEmailLocalChars.IndexOf(char.ToLower(c));
-                    code *= AllowedEmailLocalChars.Count - idx;
-                    Console.Write(code + " ");
-                    Console.WriteLine(idx);
-                }
+                output = DateTime.Now < request.CreatedOn.AddMinutes(30);
+                ctx.Requests.Remove(request);
+                await ctx.SaveChangesAsync();
+                Console.WriteLine($"{code}, {request.Code}");
             }
-
-            // Turn BigInteger into base-N string using AllowedEmailLocalChars
-            string output = "";
-            BigInteger n = code;
-            int baseN = AllowedEmailLocalChars.Count;
-
-            if (n == 0) return AllowedEmailLocalChars[0].ToString();
-
-            while (n > 0)
+            else
             {
-                int remainder = (int)(n % baseN);
-                output = AllowedEmailLocalChars[remainder] + output;
-                n /= baseN;
+                Console.WriteLine($"{code}, request not found.");
             }
-
-            Console.WriteLine(output);
             return output;
         }
 
-        public bool VerifyCode(string emailAddress, string code)
-        {
-            string user = string.Join("", emailAddress.Split("@"));
-            string text = File.ReadAllText("cache.txt");
-            List<string> parts = text.Split('@').ToList();
-
-            for (int i = parts.Count - 1; i >= 0; i--)
-            {
-                var salt = parts[i].Split(':');
-                if (salt[0] == user)
-                {
-                    user += salt[1];
-                    parts.RemoveAt(i);
-                    return code == CreateCode(emailAddress, true).Substring(0, int.Parse(config["Secrets:codeLength"] ?? "10"));
-                }
-            }
-            return false;
-        }
     }
 }

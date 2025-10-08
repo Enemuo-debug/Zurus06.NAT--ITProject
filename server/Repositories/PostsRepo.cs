@@ -40,12 +40,15 @@ namespace server.Repositories
                 for (int i = 0; i < newPost.Contents.Count; i++)
                 {
                     var cont = await context.Contents.FirstOrDefaultAsync(c => c.Id == newPost.Contents[i]);
-                    if (cont == null) return null;
+                    if (cont == null || cont.linked) return null;
                     allContents.Add(cont);
                 }
+
+                // Link the contents like a linked list
                 for (int i = 0; i < allContents.Count; i++)
                 {
                     allContents[i].Link = i < allContents.Count - 1 ? allContents[i + 1].Id : 0;
+                    allContents[i].linked = true;
                     context.Contents.Update(allContents[i]);
                     await context.SaveChangesAsync();
                 }
@@ -75,7 +78,7 @@ namespace server.Repositories
             List<OutputPostDto> allPosts = new List<OutputPostDto>();
             foreach (var post in posts)
             {
-                allPosts.Add(await post.PostDetails(contentRepo as ContentRepo));
+                allPosts.Add(await post.PostDetails(contentRepo));
             }
             return allPosts;
         }

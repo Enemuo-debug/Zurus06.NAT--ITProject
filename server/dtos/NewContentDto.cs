@@ -12,7 +12,7 @@ namespace server.dtos
         public string type { get; set; }
         public string Content { get; set; } = string.Empty;
         public IFormFile? File { get; set; } = null;
-        public int? NATSimulationId { get; set; } = null;
+        public string simUUID { get; set; } = string.Empty;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -73,11 +73,11 @@ namespace server.dtos
             // --- NAT SIMULATION TYPE VALIDATION ---
             if (mappedType == ContentTypes.NATSimulation)
             {
-                if (!NATSimulationId.HasValue || NATSimulationId <= 0)
+                if (string.IsNullOrEmpty(simUUID))
                 {
                     yield return new ValidationResult(
                         "NATSimulationId must be provided when type is NATSimulation.",
-                        new[] { nameof(NATSimulationId) });
+                        new[] { nameof(simUUID) });
                 }
 
                 if (!string.IsNullOrWhiteSpace(Content) || File != null)

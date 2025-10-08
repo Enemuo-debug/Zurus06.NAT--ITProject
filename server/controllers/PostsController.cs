@@ -142,7 +142,7 @@ namespace server.controllers
             {
                 type = type,
                 Content = updatedContentDto.Content,
-                NATSimulationId = updatedContentDto.NATSimulationId!.Value,
+                simUUID = updatedContentDto.simUUID,
                 Owner = user.Id
             };
 

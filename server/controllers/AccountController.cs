@@ -40,7 +40,12 @@ namespace server.controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             // Create email Subject
             string Subject = $"WELCOME TO Zurus06.NAT";
-            string Body = $"Verify your email address using this link {config["Jwt:URL"]}{ecv.CreateCode(verifyEmailDto.EmailAddress).Substring(0, int.Parse(config["Secrets:codeLength"] ?? "10"))}";
+            string? code = await ecv.CreateCode(verifyEmailDto.EmailAddress);
+            if (string.IsNullOrEmpty(code))
+            {
+                return BadRequest("The email you have provided is already exists on an account");
+            }
+            string Body = $"Verify your email address using this link {config["Jwt:URL"]}{code}";
             await emailService.SendEmailAsync(verifyEmailDto.EmailAddress, Subject, Body);
             return Ok($"Email verification code has been sent to {verifyEmailDto.EmailAddress}");
         }
@@ -49,7 +54,7 @@ namespace server.controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             // Verify the code
-            if (!ecv.VerifyCode(createAccountDto.EmailAddress, id)) return Unauthorized("Incorrect code");
+            if (!await ecv.VerifyCode(createAccountDto.EmailAddress, id)) return Unauthorized("Incorrect code");
             var newUser = new NATUser
             {
                 UserName = createAccountDto.UserName,

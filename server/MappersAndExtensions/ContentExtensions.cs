@@ -39,7 +39,7 @@ namespace server.MappersAndExtensions
                     return new NetContent
                     {
                         Id = contentDto.Id,
-                        NATSimulation = await nS.GetSimulationById(contentDto.NATSimulationId)
+                        NATSimulation = await nS.EmbedSimulation(contentDto.simUUID)
                     };
                 default:
                     throw new NotSupportedException($"Content type doesn't exist.");

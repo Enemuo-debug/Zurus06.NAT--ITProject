@@ -12,8 +12,9 @@ namespace server.NATModels
         public required ContentTypes type { get; set; } = ContentTypes.Text;
         public string ImgLink { get; set; } = "#";
         public string Content { get; set; } = string.Empty;
-        public int NATSimulationId { get; set; }
+        public string simUUID { get; set; } = string.Empty;
         public int Link { get; set; }
         public required string Owner { get; set; }
+        public bool linked { get; set; } = false;
     }
 }
