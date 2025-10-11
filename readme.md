@@ -4,6 +4,6 @@
 ---
 
 📅 *Last updated:* October 2025  
-🧑‍💻 *Crafted by [Your Name]*  
+🧑‍💻 *Crafted by Zurus*  
 
 ---
