@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using server.Interfaces;
 using server.data;
@@ -10,7 +6,6 @@ using server.dtos;
 using server.tools;
 using server.MappersAndExtensions;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace server.Repositories
 {
@@ -34,32 +29,12 @@ namespace server.Repositories
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return null;
-            if (newPost.Contents != null && newPost.Contents.Count > 0)
-            {
-                List<NATContent> allContents = new List<NATContent>();
-                for (int i = 0; i < newPost.Contents.Count; i++)
-                {
-                    var cont = await context.Contents.FirstOrDefaultAsync(c => c.Id == newPost.Contents[i]);
-                    if (cont == null || cont.linked) return null;
-                    allContents.Add(cont);
-                }
-
-                // Link the contents like a linked list
-                for (int i = 0; i < allContents.Count; i++)
-                {
-                    allContents[i].Link = i < allContents.Count - 1 ? allContents[i + 1].Id : 0;
-                    allContents[i].linked = true;
-                    context.Contents.Update(allContents[i]);
-                    await context.SaveChangesAsync();
-                }
-            }
 
             var post = new NATPosts
             {
                 userId = user.Id,
                 Caption = newPost.Caption,
-                Intro = newPost.Intro,
-                Content = newPost.Contents != null && newPost.Contents.Count > 0 ? newPost.Contents[0] : 0
+                Intro = newPost.Intro
             };
 
             await context.Posts.AddAsync(post);
@@ -83,7 +58,7 @@ namespace server.Repositories
             return allPosts;
         }
 
-        public async Task<bool> UpdatePost(NewPostDto updatedPost, int postId, string? email)
+        public async Task<bool> UpdatePost(UpdatePostDto updatedPost, int postId, string? email)
         {
             NATPosts? post = await GetPostById(postId);
             if (post == null) return false;
@@ -91,14 +66,12 @@ namespace server.Repositories
             var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null || post.userId != user.Id) return false;
 
-            // ✅ Always update caption/intro
             post.Caption = updatedPost.Caption;
             post.Intro = updatedPost.Intro;
 
-            List<int> existingContentIds = await PostsExtension.GetContentIdsOnAPost(post, contentRepo as ContentRepo);
+            List<int> existingContentIds = await PostsExtension.GetContentIdsOnAPost(post, contentRepo);
             List<int>? newContentsArray = updatedPost.Contents;
 
-            // ✅ If contents were sent, handle add/remove/link logic
             if (newContentsArray != null)
             {
                 // Remove deleted contents
@@ -106,12 +79,7 @@ namespace server.Repositories
                 {
                     if (!newContentsArray.Contains(contentId))
                     {
-                        Tuple<int, bool> isDeleted = await contentRepo.DeleteContent(contentId, false);
-                        while (!isDeleted.Item2)
-                        {
-                            isDeleted = await contentRepo.DeleteContent(contentId, false);
-                            if (isDeleted.Item2) existingContentIds.Remove(contentId);
-                        }
+                        await contentRepo.DeleteContent(contentId, false);
                     }
                 }
 
@@ -127,8 +95,7 @@ namespace server.Repositories
                             ? await contentRepo.GetContentById(newContentsArray[i + 1])
                             : null;
 
-                        if (currentContent != null)
-                            currentContent.Link = nextContent.Id;
+                        if (currentContent != null && nextContent != null) currentContent.Link = nextContent.Id;
                     }
                 }
             }

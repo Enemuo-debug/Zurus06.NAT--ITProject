@@ -1,114 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./styles.css">
-  <title>Zurus06.NAT-Simulator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Network Simulation Platform</title>
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <div class="Layout">
-    <!-- Left column -->
-    <aside class="LeftPanel">
-      <h2>Zurus06.NAT</h2>
-      <hr>
+  <header>
+    <h1>Zurus06.NAT</h1>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
 
-      <section class="DeviceSection">
-        <h3>Devices: Drag object to Simulation Area and right click to remove from simulation area</h3>
-        <div class="deviceGrid">
-          <div class="device" data-device="PC" draggable="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M3 4h18v12H3zM2 18h20v2H2z"/>
-            </svg>
-            <h1>PC</h1>
-          </div>
-          <div class="device" data-device="Switch" draggable="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z"/>
-            </svg>
-            <h1>Switch</h1>
-          </div>
-          <div class="device" data-device="Router" draggable="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M12 2l8 4v12l-8 4-8-4V6z"/>
-            </svg>
-            <h1>Router</h1>
-          </div>
-          <div class="device" data-device="Server" draggable="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M2 6h20v12H2zM4 8v8h16V8z"/>
-            </svg>
-            <h1>Server</h1>
-          </div>
-        </div>
-      </section>
-
-      <!-- Description -->
-      <section class="Description">
-        <h3>Description</h3>
-        <p>Select a device to see details here.</p>
-      </section>
-
-      <section style="text-align: center;">
-      <h3 style="color: blanchedalmond; font-size: large;">OPERATIONS</h3>
-      <section class="operationsSection">
-        
-        <button class="operations" id="join">
-          <!-- Start Link Icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="5" cy="12" r="3"></circle>
-            <line x1="8" y1="12" x2="16" y2="12"></line>
-          </svg>
-          Link Devices
-        </button>
-
-        <button class="operations">
-          <!-- Shortest Path Icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 3h10l-3 5 3 5H3z"></path>
-          </svg>
-          Shortest Path
-        </button>
-
-        <button class="operations">
-          <!-- Minimum Spanning Tree Icon -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" 
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="6" cy="4" r="2"></circle>
-            <circle cx="14" cy="4" r="2"></circle>
-            <circle cx="10" cy="12" r="2"></circle>
-            <line x1="6" y1="6" x2="10" y2="10"></line>
-            <line x1="14" y1="6" x2="10" y2="10"></line>
-          </svg>
-          Minimum Spanning Tree
-        </button>
-
-      </section>
-    </section>
-    
-      <!-- File Actions -->
-      <section class="FileSection">
-        <button>EXIT</button>
-        <button>SAVE</button>
-        <button class="danger">DELETE SIMULATION</button>
-      </section>
-    </aside>
-
-    <!-- Right column split into two rows -->
-    <div class="RightPanel">
-      <canvas class="SimulationArea"></canvas>
-      <section class="ConsoleArea">
-        <div class="console-header">
-          <span>Console Output</span>
-          <button id="clearlog">CLEAR LOG</button>
-        </div>
-        <div id="logOutput"></div>
-      </section>
+  <section class="hero">
+    <h2>Visualize. Connect. Simulate.</h2>
+    <p>
+      Zurus06.NAT helps you build and understand computer networks through an interactive visual interface.
+      Create routers, switches, servers, and PCs. Connect them, simulate links, and explore how real networks operate.
+    </p>
+    <div class="btn-group">
+      <a href="signin.html">Sign In</a>
+      <a href="signup.html">Get Started</a>
     </div>
-  </div>
+  </section>
 
-  <script src="index.js"></script>
+  <section id="about" class="about">
+    <h2>About</h2>
+    <p>
+      Zurus06.NAT is a minimalist, browser-based network simulation tool.  
+      Built for simplicity, it enables you to visualize network topologies, test device connections,  
+      and simulate packet flow — without installing heavy software.
+    </p>
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+    <div class="features">
+      <div class="feature-card">
+        <h3>Network Educational Blog</h3>
+        <p>Interact with like minded individuals in the tech space, read quality networking content and grow together, stronger and better</p>
+      </div>
+      <div class="feature-card">
+        <h3>Interactive Simulation</h3>
+        <p>Drag and drop networking devices to build live network topologies instantly.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Network Operations Simulation</h3>
+        <p>Get the likes of the Dijkstra's algorithm in finding shortest path for your simulations and Prim's for your MST Problems</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <h2>Contact</h2>
+    <p>Email: <a href="mailto:zuruscodetestingemail@gmail.com">support@zurus06nat.com</a></p>
+    <p>X: <a href="https://x.com/Zurus06">@Zurus06</a></p>
+    <p>GitHub: <a href="https://github.com/Enemuo-debug/Zurus06.NAT--ITProject.git" target="_blank">Zurus06.NAT Repository</a></p>
+  </section>
+
+  <footer>
+    &copy; 2025 Zurus06.NAT — All rights reserved.
+  </footer>
 </body>
 </html>

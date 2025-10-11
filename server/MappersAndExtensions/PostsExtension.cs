@@ -40,13 +40,21 @@ namespace server.MappersAndExtensions
             postDto.Intro = Cipher.HillCipherEncrypt(postDto.Intro);
             return postDto;
         }
+
+        public static UpdatePostDto EncryptPostDto(this UpdatePostDto postDto)
+        {
+            postDto.Caption = Cipher.HillCipherEncrypt(postDto.Caption);
+            postDto.Intro = Cipher.HillCipherEncrypt(postDto.Intro);
+            return postDto;
+        }
+
         public static NewPostDto DecryptPostDto(this NewPostDto postDto)
         {
             postDto.Caption = Cipher.HillCipherDecrypt(postDto.Caption);
             postDto.Intro = Cipher.HillCipherDecrypt(postDto.Intro);
             return postDto;
         }
-        public static async Task<List<int>> GetContentIdsOnAPost(this NATPosts post, ContentRepo contentRepo)
+        public static async Task<List<int>> GetContentIdsOnAPost(this NATPosts post, IContent contentRepo)
         {
             int currentContentId = post.Content;
             List<int> output = [];

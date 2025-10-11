@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+  <div class="signup-container">
+    <h2>Create Your Zurus06.NAT Account</h2>
+    <form id="signupForm">
+      <div class="form-group">
+        <label for="username">User Name</label>
+        <input type="text" id="username" required />
+      </div>
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input type="text" id="displayName" required />
+      </div>
+      <div class="form-group bio">
+        <label for="bio">Bio</label>
+        <textarea id="bio" minlength="30" maxlength="300" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="form-group">
+        <label for="niche">Niche</label>
+        <select id="niche" required>
+          <option value="">Select Niche</option>
+          <option value="1">Network Design</option>
+          <option value="2">Network Security</option>
+          <option value="3">Network Management & Monitoring</option>
+          <option value="4">Network Technology & Trends</option>
+          <option value="5">Networking Troubleshooting & Optimization</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required />
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" required />
+      </div>
+
+      <div class="email-code-group">
+        <label for="code">Verification Code</label>
+        <input type="text" id="code" placeholder="Enter the code sent to your email" required />
+      </div>
+
+      <button type="submit">Create Account</button>
+    </form>
+
+    <div class="redirect-links">
+      <p>Already have an account? <a href="/browser/signin.html">Login here</a></p>
+      <p>Didn’t verify your email? <a href="/browser/signin.html">Verify your email</a></p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("signupForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const code = document.getElementById("code").value.trim();
+      const payload = {
+        userName: document.getElementById("username").value.trim(),
+        displayName: document.getElementById("displayName").value.trim(),
+        emailAddress: document.getElementById("email").value.trim(),
+        bio: document.getElementById("bio").value.trim(),
+        niche: parseInt(document.getElementById("niche").value),
+        password: document.getElementById("password").value,
+        confirmPassword: document.getElementById("confirmPassword").value,
+      };
+
+      const response = await fetch(`http://localhost:5245/account/create/${code}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const message = await response.text();
+      alert(message);
+      window.location = "/browser/index.html"
+    });
+  </script>
+</body>
+</html>

@@ -39,13 +39,13 @@ namespace server.controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             // Create email Subject
-            string Subject = $"WELCOME TO Zurus06.NAT";
+            string Subject = "🔐 Your Zurus06.NAT Login Code";
             string? code = await ecv.CreateCode(verifyEmailDto.EmailAddress);
             if (string.IsNullOrEmpty(code))
             {
                 return BadRequest("The email you have provided is already exists on an account");
             }
-            string Body = $"Verify your email address using this link {config["Jwt:URL"]}{code}";
+            string Body = ecv.GenerateBody(code);
             await emailService.SendEmailAsync(verifyEmailDto.EmailAddress, Subject, Body);
             return Ok($"Email verification code has been sent to {verifyEmailDto.EmailAddress}");
         }
@@ -53,8 +53,6 @@ namespace server.controllers
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountDto createAccountDto, [FromRoute] string id)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            // Verify the code
-            if (!await ecv.VerifyCode(createAccountDto.EmailAddress, id)) return Unauthorized("Incorrect code");
             var newUser = new NATUser
             {
                 UserName = createAccountDto.UserName,
@@ -63,9 +61,11 @@ namespace server.controllers
                 DisplayName = createAccountDto.DisplayName,
                 niche = (Niche) createAccountDto.Niche
             };
+            // Verify the code
+            if (!await ecv.VerifyCode(createAccountDto.EmailAddress, id)) return Unauthorized("Incorrect code");
             var createdUser = await userManager.CreateAsync(newUser, createAccountDto.Password);
             if (createdUser.Succeeded) return Ok("New User has been created successfully");
-            return BadRequest(createdUser.Errors);
+            return BadRequest(createdUser.Errors.Select(e=>e.Description));
         }
         [HttpPost]
         [Route("login")]
@@ -88,7 +88,7 @@ namespace server.controllers
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Strict,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.Now.AddDays(1)
                 };
 
@@ -118,6 +118,23 @@ namespace server.controllers
             List<OutputPostDto> userPosts = await postsRepo.GetAllUsersPosts(user.Id);
             UserDetailsDto userDetailsDto = JointMapper.MapToUserDetailsDto(user.UserDetails(), userPosts);
             return Ok(userDetailsDto);
+        }
+
+        [HttpGet("logout")]
+        public IActionResult Logout()
+        {
+            if (Request.Cookies.ContainsKey("NAT-Authentication"))
+            {
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.Now.AddDays(-1) // Set the expiration date to the past
+                };
+                Response.Cookies.Append("NAT-Authentication", "", cookieOptions);
+            }
+            return Ok("You have been logged out successfully");
         }
     }
 }

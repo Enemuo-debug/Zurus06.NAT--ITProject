@@ -11,17 +11,17 @@ namespace server.MappersAndExtensions
 {
     public static class ClaimsExtension
     {
-        public static string? GetUserEmail(this ClaimsPrincipal user)
+        public static string GetUserEmail(this ClaimsPrincipal user)
         {
-            if (user == null) return null;
-            if (!user.Identity.IsAuthenticated) return null;
-            return user.FindFirst("Email-Address").Value;
+            if (user == null) return string.Empty;
+            if (user.Identity == null || !user.Identity.IsAuthenticated) return string.Empty;
+            return user.FindFirst("Email-Address").Value ?? string.Empty;
         }
 
         public async static Task<NATUser?> GetUser(this ClaimsPrincipal user, ApplicationDbContext context)
         {
             if (user == null) return null;
-            if (!user.Identity.IsAuthenticated) return null;
+            if (user.Identity == null || !user.Identity.IsAuthenticated) return null;
             return await context.Users.FirstOrDefaultAsync(c => c.Email == user.FindFirst("Email-Address").Value);
         }
     }

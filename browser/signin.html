@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Login / Email Verify</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="signin.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" id="verifyTab">Email Verify</div>
+      <div class="tab" id="signinTab">Sign In</div>
+    </div>
+
+    <!-- Verify Email -->
+    <form id="verifyForm" class="form active">
+      <div class="title">Verify Your Email</div>
+      <input type="email" id="verifyEmail" placeholder="Enter your email" required />
+      <button type="submit" id="verificationButton">Send Verification Code</button>
+      <small>We'll send a code to your email address</small>
+      <small><a href="#" id="goToSignin">Already have an account? Sign In</a></small>
+    </form>
+
+    <!-- Sign In -->
+    <form id="signinForm" class="form">
+      <div class="title">Sign In</div>
+      <input type="email" id="signinEmail" placeholder="Email" required />
+      <input type="password" id="signinPassword" placeholder="Password" required />
+      <button type="submit" id="signInButton">Login</button>
+      <small><a href="#" id="goToVerify">Sign Up?</a></small>
+    </form>
+  </div>
+
+  <script>
+    const verifyTab = document.getElementById('verifyTab');
+    const signinTab = document.getElementById('signinTab');
+    const verifyForm = document.getElementById('verifyForm');
+    const signinForm = document.getElementById('signinForm');
+    const goToSignin = document.getElementById('goToSignin');
+    const goToVerify = document.getElementById('goToVerify');
+
+    // Toggle between forms
+    verifyTab.onclick = () => {
+      verifyTab.classList.add('active');
+      signinTab.classList.remove('active');
+      verifyForm.classList.add('active');
+      signinForm.classList.remove('active');
+    };
+
+    signinTab.onclick = () => {
+      signinTab.classList.add('active');
+      verifyTab.classList.remove('active');
+      signinForm.classList.add('active');
+      verifyForm.classList.remove('active');
+    };
+
+    goToSignin.onclick = (e) => {
+      e.preventDefault();
+      signinTab.click();
+    };
+
+    goToVerify.onclick = (e) => {
+      e.preventDefault();
+      window.location = "/browser/signup.html"
+    };
+
+    // Email Verification
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('verifyEmail').value.trim();
+      if (!email) return alert('Please enter a valid email');
+
+      try {
+            const response = await fetch('http://localhost:5245/account/email-verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ EmailAddress: email })
+            });
+            const message = await response.text();
+            alert(message);
+          } catch (err) {
+            alert('Error: ' + err.message);
+          }
+        });
+
+        // Sign In
+        signinForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('signinEmail').value.trim();
+          const password = document.getElementById('signinPassword').value.trim();
+          if (!email || !password) return alert('Please fill all fields');
+
+          try {
+                const response = await fetch('http://localhost:5245/account/login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ emailAddress: email, password })
+                });
+
+                if (!response.ok) {
+                  const errData = await response.text();
+                  alert(errData);
+                  return;
+                }
+
+                const data = await response.json(); // parse JSON
+                alert(data.message); // only show message text
+
+                window.location = "/browser/dashboard.html";
+              } catch (err) {
+                alert('Login failed: ' + err.message);
+              }
+              });
+  </script>
+</body>
+</html>

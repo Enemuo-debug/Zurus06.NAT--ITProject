@@ -1,0 +1,232 @@
+:root {
+    --bg: #0f0f12;
+    --card-bg: #18181c;
+    --text: #f3f3f3;
+    --accent: #00bcd4;
+    --accent-light: #00e5ff;
+    --border: #2a2a2f;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: var(--card-bg);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--accent-light);
+}
+
+header nav a {
+    color: var(--accent-light);
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+header nav a:hover {
+    color: white;
+}
+
+main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+aside {
+    width: 250px;
+    background-color: #141417;
+    padding: 1.5rem;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.profile {
+    text-align: center;
+}
+
+.profile img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 2px solid var(--accent-light);
+}
+
+.profile h2 {
+    margin: 0.5rem 0 0;
+    font-size: 1.1rem;
+}
+
+.profile p {
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+.sidebar-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.sidebar-links a, .sidebar-links button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.sidebar-links a:hover, .sidebar-links button:hover {
+    color: var(--accent-light);
+    transform: translateX(4px);
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent-light);
+}
+
+/* --- Create Post Card --- */
+.create-post-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    margin-bottom: 2rem;
+}
+
+.create-post-card h3 {
+    margin-top: 0;
+    color: var(--accent);
+}
+
+.create-post-card input,
+.create-post-card textarea {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #1e1e22;
+    color: var(--text);
+    font-size: 0.95rem;
+    resize: none;
+}
+
+button {
+    margin-top: 1rem;
+    background-color: var(--accent);
+    border: none;
+    color: black;
+    font-weight: 600;
+    padding: 0.7rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background-color: var(--accent-light);
+    transform: scale(1.03);
+}
+
+/* --- Post Cards --- */
+.post {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.2rem;
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
+    transition: 0.3s;
+}
+
+.post:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+}
+
+.post h3 {
+    margin: 0 0 0.5rem;
+    color: var(--accent);
+}
+
+.intro {
+    font-size: 0.95rem;
+    color: #bbb;
+}
+
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.8rem;
+}
+
+.edit-btn, .delete-btn {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent-light);
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.edit-btn:hover {
+    background-color: var(--accent);
+    color: black;
+}
+
+.delete-btn:hover {
+    background-color: crimson;
+    border-color: crimson;
+    color: white;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.85rem;
+    background-color: var(--card-bg);
+    border-top: 1px solid var(--border);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--accent);
+    border-radius: 6px;
+}

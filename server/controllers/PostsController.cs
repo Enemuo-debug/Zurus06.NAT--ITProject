@@ -101,14 +101,14 @@ namespace server.controllers
 
         [Authorize]
         [HttpPut("edit/{postId:int}")]
-        public async Task<IActionResult> EditPost([FromRoute] int postId, [FromBody] NewPostDto editPost)
+        public async Task<IActionResult> EditPost([FromRoute] int postId, [FromBody] UpdatePostDto editPost)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             // Get the logged in user
             var user = await postsRepo.GetLoggedInUser(User);
             if (user == null) return BadRequest("This user no longer exists...");
             editPost = editPost.EncryptPostDto();
-            string? email = User.GetUserEmail();
+            string email = User.GetUserEmail() ?? string.Empty;
             bool isUpdated = await postsRepo.UpdatePost(editPost, postId, email);
             return isUpdated ? Ok("Post Successfully Updated!!!") : StatusCode(204, new { message = "The post is being modified by someone else at this time" });
         }

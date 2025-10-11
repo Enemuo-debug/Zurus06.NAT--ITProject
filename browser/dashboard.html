@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Dashboard</title>
+  ,<link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <header>
+    <h1>Zurus06.NAT Dashboard</h1>
+    <nav>
+      <button>LOG OUT</button>
+    </nav>
+  </header>
+
+  <main>
+    <aside>
+      <div class="profile">
+        <img id="userAvatar" src="https://via.placeholder.com/90" alt="User Avatar" />
+        <h2 id="username">Loading...</h2>
+        <p id="userbio"></p>
+        <p id="userjoined"></p>
+      </div>
+
+      <div class="sidebar-links">
+        <a href="#">Network Simulations</a>
+        <a href="/readme_github_file">Help</a>
+      </div>
+    </aside>
+
+    <section class="content">
+      <h2 class="section-title">My Posts</h2>
+
+      <!-- 🧠 Create New Post Card -->
+      <div class="create-post-card">
+        <h3>+ Create New Post</h3>
+        <form id="createPostForm">
+          <input type="text" id="postTitle" placeholder="Enter Post Title" required />
+          <textarea id="postIntro" placeholder="Write a short intro..." rows="3" required></textarea>
+          <button type="submit">Create Post</button>
+        </form>
+      </div>
+
+      <!-- 📰 Posts -->
+      <div id="posts-container" class="posts-container">
+        <p>Loading posts...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 Zurus06.NAT — All rights reserved.
+  </footer>
+
+  <script>
+    const postsContainer = document.getElementById("posts-container");
+    const avatarImg = document.getElementById("userAvatar");
+
+    const diceBearStyles = {
+      "Network Design": "notionists",
+      "Network Security": "fun-emoji",
+      "Network Management And Monitoring": "adventurer",
+      "Network Technology And Trends": "bottts",
+      "Networking Troubleshooting And Optimization": "avataaars"
+    };
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch("http://localhost:5245/account/me", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        });
+
+        if (response.status === 401) {
+          alert("You are not logged in. Please sign in again.");
+          window.location.href = "/browser/signin.html";
+          return;
+        }
+
+        const userData = await response.json();
+        const user = userData.userDetails;
+        console.log(userData.userDetails);
+
+        document.getElementById("username").textContent = user.displayName;
+        document.getElementById("userbio").textContent = user.bio || "No bio available.";
+        document.getElementById("userjoined").textContent =
+          "Joined: " + new Date(user.joinedAt).toDateString();
+
+        const nicheKey = Object.keys(diceBearStyles).find(k =>
+          user.niche && user.niche.toLowerCase().includes(k.toLowerCase())
+        );
+        const style = diceBearStyles[nicheKey];
+        const seed = encodeURIComponent(user.displayName || "user");
+        avatarImg.src = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4`;
+
+        renderPosts(userData.userPosts || []);
+      } catch (error) {
+        postsContainer.innerHTML = `<p style="color:red;">Error loading dashboard: ${error.message}</p>`;
+      }
+    }
+
+    function renderPosts(posts) {
+      postsContainer.innerHTML = "";
+      if (posts.length === 0) {
+        postsContainer.innerHTML = "<p>You haven’t created any posts yet.</p>";
+        return;
+      }
+
+      posts.forEach(post => {
+        const postDiv = document.createElement("div");
+        postDiv.classList.add("post");
+        postDiv.innerHTML = `
+          <h3>${post.caption}</h3>
+          <p class="intro">${post.intro}</p>
+          <div class="post-actions">
+            <button class="edit-btn" data-id="${post.id}">Edit</button>
+            <button class="delete-btn" data-id="${post.id}">Delete</button>
+          </div>
+        `;
+        postsContainer.appendChild(postDiv);
+      });
+    }
+
+    document.getElementById("createPostForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("postTitle").value.trim();
+      const intro = document.getElementById("postIntro").value.trim();
+
+      try {
+        const res = await fetch("http://localhost:5245/posts/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ caption: title, intro })
+        });
+
+        if (!res.ok) throw new Error("Failed to create post");
+        const newPost = await res.json();
+
+        const newDiv = document.createElement("div");
+        newDiv.classList.add("post");
+        newDiv.innerHTML = `
+          <h3>${newPost.caption}</h3>
+          <p class="intro">${newPost.intro}</p>
+          <div class="post-actions">
+            <button class="edit-btn" data-id="${newPost.id}">Edit</button>
+            <button class="delete-btn" data-id="${newPost.id}">Delete</button>
+          </div>
+        `;
+        postsContainer.prepend(newDiv);
+        e.target.reset();
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>

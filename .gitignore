@@ -28,6 +28,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Entity Framework Migrations
+[Mm]igrations/
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
@@ -53,3 +56,6 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 .vscode
+
+# ENV Variables
+.env

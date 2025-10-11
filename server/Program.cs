@@ -12,12 +12,16 @@ using server.Repositories;
 using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using server.dtos;
+using Microsoft.Extensions.Hosting;
+using DotNetEnv;
 
+// Setting up the web api builder and environmental variables
 var builder = WebApplication.CreateBuilder(args);
+Env.Load();
 
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(Environment.GetEnvironmentVariable("DB_Connection")));
 
 // Configure Identity
 builder.Services.AddIdentityCore<NATUser>(options =>
@@ -30,6 +34,18 @@ builder.Services.AddIdentityCore<NATUser>(options =>
 })
 .AddSignInManager()
 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5500", "http://127.0.0.1:5500")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -71,6 +87,7 @@ builder.Services.AddScoped<EmailCodeVerification>();
 builder.Services.AddScoped<JWTToken>();
 builder.Services.AddScoped<IPosts, PostsRepo>();
 builder.Services.AddScoped<IContent, ContentRepo>();
+builder.Services.AddScoped<ISimulation, NATSimRepo>();
 builder.Services.AddScoped<FileUpload>();
 
 // Swagger + JWT support
@@ -151,9 +168,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Enable serving static files from the "wwwroot" folder but in this case I dont want to serve the files here
-// app.UseStaticFiles();
+// Allow front-end fetch requests
+app.UseCors("AllowFrontend");
 
 app.MapControllers();
 

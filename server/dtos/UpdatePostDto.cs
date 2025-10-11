@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using server.NATModels;
 
 namespace server.dtos
 {
-    public class NewPostDto
+    public class UpdatePostDto
     {
         [Required]
         [MaxLength(150, ErrorMessage = "Post Caption cannot exceed 450 characters.")]
@@ -15,5 +16,6 @@ namespace server.dtos
 
         [MaxLength(650, ErrorMessage = "Post Caption cannot exceed 650 characters.")]
         public required string Intro { get; set; }
+        public List<int> Contents { get; set; } = [];
     }
 }
