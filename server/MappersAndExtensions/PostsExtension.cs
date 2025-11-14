@@ -28,10 +28,10 @@ namespace server.MappersAndExtensions
             return new OutputPostDto
             {
                 Id = post.Id,
+                creatorId = post.userId,
                 Caption = Cipher.HillCipherDecrypt(post.Caption),
                 Intro = Cipher.HillCipherDecrypt(post.Intro),
-                Contents = allContents,
-                creatorId = post.userId
+                Contents = allContents
             };
         }
 

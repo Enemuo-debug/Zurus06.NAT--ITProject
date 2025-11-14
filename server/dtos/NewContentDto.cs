@@ -68,11 +68,11 @@ namespace server.dtos
                 }
                 else
                 {
-                    const long maxFileSize = 5 * 1024 * 1024; // 5 MB
+                    const long maxFileSize = 10 * 1024 * 1024;
                     if (File.Length > maxFileSize)
                     {
                         yield return new ValidationResult(
-                            "Image file size cannot exceed 5MB.",
+                            "Image file size cannot exceed 10MB.",
                             new[] { nameof(File) });
                     }
                 }
