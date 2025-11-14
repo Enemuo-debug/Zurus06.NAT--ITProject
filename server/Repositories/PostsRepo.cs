@@ -70,15 +70,16 @@ namespace server.Repositories
             post.Intro = updatedPost.Intro;
 
             List<int> existingContentIds = await PostsExtension.GetContentIdsOnAPost(post, contentRepo);
-            List<int>? newContentsArray = updatedPost.Contents;
+            List<int> newContentsArray = updatedPost.Contents;
 
             if (newContentsArray != null)
             {
                 // Remove deleted contents
-                foreach (var contentId in existingContentIds.ToList())
+                foreach (int contentId in existingContentIds)
                 {
                     if (!newContentsArray.Contains(contentId))
                     {
+                        // Ensure content is not referenced by any other post or content before deleting
                         await contentRepo.DeleteContent(contentId, false);
                     }
                 }
@@ -91,20 +92,31 @@ namespace server.Repositories
                     for (int i = 0; i < newContentsArray.Count; i++)
                     {
                         var currentContent = await contentRepo.GetContentById(newContentsArray[i]);
-                        var nextContent = (i < newContentsArray.Count - 1)
-                            ? await contentRepo.GetContentById(newContentsArray[i + 1])
-                            : null;
-
-                        if (currentContent != null && nextContent != null) currentContent.Link = nextContent.Id;
+                        var nextContentId = (i < newContentsArray.Count - 1) ? newContentsArray[i + 1] : 0;
+                        if (currentContent != null)
+                        {
+                            currentContent.Link = nextContentId;
+                            currentContent.Owner = user.Id; // Ensure the content owner is correct
+                            currentContent.linked = true;
+                        }
                     }
                 }
+                else
+                {
+                    // If no contents, unlink the post
+                    post.Content = 0;
+                }
+            }
+            else
+            {
+                // If contents array is null, unlink the post
+                post.Content = 0;
             }
 
-            // ✅ Save changes even if no contents were provided
             context.Posts.Update(post);
             await context.SaveChangesAsync();
 
-            // Optionally clean up unused contents after updating
+            // Clean up unused contents after updating
             await contentRepo.ClearUnusedContents(user.Id);
 
             return true;
@@ -118,32 +130,24 @@ namespace server.Repositories
         public async Task<bool> DeletePost(int postId, string userId)
         {
             var post = await context.Posts.FindAsync(postId);
-            bool answer = false;
-            if (post == null) return answer;
-            // Delets all associated contents
+            if (post == null) return false;
+
+            // Delete all linked contents (if any)
             int current = post.Content;
             while (current != 0)
             {
-                Tuple<int, bool> isDeleted = await contentRepo.DeleteContent(current, false);
+                var isDeleted = await contentRepo.DeleteContent(current, false);
                 current = isDeleted.Item1;
             }
-            // Delete Post and unused content
-            context.Posts.Remove(post);
-            bool result = await contentRepo.ClearUnusedContents(userId);
-            while (!result)
-            {
-                try
-                {
-                    context.Posts.Remove(post);
-                    result = await contentRepo.ClearUnusedContents(userId);
-                }
-                catch (System.Exception)
-                {
-                    continue;
-                }
-            }
 
-            return result;
+            // Delete the post
+            context.Posts.Remove(post);
+            await context.SaveChangesAsync();
+
+            // Clean up orphaned contents
+            await contentRepo.ClearUnusedContents(userId);
+
+            return true;
         }
     }
 }

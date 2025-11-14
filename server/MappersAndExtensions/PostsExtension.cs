@@ -22,7 +22,7 @@ namespace server.MappersAndExtensions
             {
                 var content = await contentRepo.GetContentById(currentContentId);
                 if (content == null) break;
-                allContents.Add(await content.DecryptContentDto());
+                allContents.Add(await content.DecryptContentDto(null!));
                 currentContentId = content.Link;
             }
             return new OutputPostDto
@@ -30,7 +30,8 @@ namespace server.MappersAndExtensions
                 Id = post.Id,
                 Caption = Cipher.HillCipherDecrypt(post.Caption),
                 Intro = Cipher.HillCipherDecrypt(post.Intro),
-                Contents = allContents
+                Contents = allContents,
+                creatorId = post.userId
             };
         }
 

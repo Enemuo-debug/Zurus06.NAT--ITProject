@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT Posts</title>
+  <link rel="stylesheet" href="posts.css" />
+</head>
+<body>
+    <header>
+    <h1>Zurus06.NAT Posts</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="signin.html">Login</a>
+    </nav>
+    </header>
+        
+    <div class="container" id="postsContainer"></div>
+
+  <script>
+    let posts = [];
+    const container = document.getElementById("postsContainer");
+
+    function Shuffle(val) {
+      for (let i = val.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [val[i], val[j]] = [val[j], val[i]];
+      }
+      return val;
+    }
+
+    async function fetchPosts() {
+      try {
+      const response = await fetch('http://localhost:5245/posts/all');
+      const data = await response.json();
+      posts = Shuffle(data);
+      renderPosts();
+      } catch (error) {
+      console.error('Error fetching posts:', error);
+      }
+    }
+
+    function renderPosts() {
+      container.innerHTML = "";
+      posts.forEach(post => {
+      const div = document.createElement("div");
+      div.className = "post-card";
+      div.innerHTML = `
+        <div class="caption">${post.caption}</div>
+        <div class="intro">${post.intro}</div>
+        <button class="btn" onclick="viewPost(${post.id})">View Post</button>
+      `;
+      container.appendChild(div);
+      });
+    }
+
+    function viewPost(id) {
+      window.location.href = `post.html?id=${id}`;
+    }
+
+    fetchPosts();
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using DotNetEnv;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 
@@ -9,14 +10,9 @@ namespace server.data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            // Build configuration
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();
-
+            Env.Load();
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = Environment.GetEnvironmentVariable("DB_Connection");
 
             builder.UseSqlServer(connectionString);
 

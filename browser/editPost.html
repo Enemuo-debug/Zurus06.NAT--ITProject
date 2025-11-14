@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Zurus06.NAT | Edit Post</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="editPost.css">
+</head>
+<body>
+  <header>
+    <h1>Zurus06.NAT</h1>
+    <nav>
+      <ul>
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="index.html">Home</a></li>
+        <li><a id="logout">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="edit-header">
+      <h2>Edit Post</h2>
+      <p>Make changes to your post content below and click <b>Save Changes</b> when done.</p>
+    </section>
+
+    <section class="edit-form">
+      <input type="text" id="postTitle" placeholder="Enter post title..." />
+      <textarea id="postContent" rows="4" placeholder="Write your short intro..."></textarea>
+    </section>
+
+    <section id="ContentCards">
+      <h3>Post Contents</h3>
+      <div id="cardsContainer" class="cards-container">
+        <!-- Dynamic content cards will appear here -->
+      </div>
+    </section>
+
+    <div class="actions">
+      <button id="savePostBtn" class="save-btn">Save Changes</button>
+    </div>
+
+    <div id="contentModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h3>Create New Content</h3>
+
+        <form id="createPostForm">
+          <label for="contentType">Content Type:</label>
+          <select id="contentType">
+            <option value="text">Text</option>
+            <option value="image">Image</option>
+            <option value="simulation">NAT Simulation</option>
+          </select>
+
+          <div id="textInputGroup">
+            <textarea id="contentData" placeholder="Enter text content..."></textarea>
+          </div>
+
+          <div id="imageInputGroup" style="display:none;">
+            <input type="file" id="imgUpload" />
+            <input type="text" id="imgCaption" placeholder="Enter image caption..." />
+          </div>
+
+          <div id="simInputGroup" style="display:none;">
+            <input type="text" id="simUUID" placeholder="Enter simulation UUID..." />
+          </div>
+
+          <button type="button" id="addContentBtn" class="add-btn">+ Add Content</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Trigger Button -->
+    <button id="openModalBtn" class="fab-btn">+ New Content</button>
+  </main>
+  <footer>
+    <p>&copy; 2025 Zurus06.NAT — All rights reserved.</p>
+  </footer>
+
+  <script src="editPost.js"></script>
+</body>
+</html>

@@ -1,245 +1,165 @@
+import { redraw, getObjectAt, findDevice } from "./canvas.js";
+
 window.addEventListener("DOMContentLoaded", () => {
-  // === Canvas & Context ===
   const canvas = document.querySelector(".SimulationArea");
   const ctx = canvas.getContext("2d");
 
-  // === Device setup ===
-  const devices = document.querySelectorAll(".device");
-  const deviceList = { Router: [0], Server: [0], Switch: [0], PC: [0] };
-  let edgeList = [];
-  let link = false;
-  let start = null;
-
-  const deviceDescriptions = {
-    PC: `
-      <strong>PC (Personal Computer):</strong> A user-end device that connects to the network 
-      through a switch or router. It sends and receives packets, runs applications, 
-      and serves as an endpoint in your simulation.
-    `,
-    Switch: `
-      <strong>Switch:</strong> A networking device that connects multiple PCs or servers within 
-      the same local area network (LAN). It uses MAC addresses to forward data efficiently.
-    `,
-    Router: `
-      <strong>Router:</strong> A device that connects different networks and routes data 
-      between them. It assigns IP addresses and directs packets to their destinations.
-    `,
-    Server: `
-      <strong>Server:</strong> A system that provides data, resources, or services to 
-      client devices (like PCs). It could host applications, files, or network configurations.
-    `
-  };
-
-  const descriptionBox = document.querySelector(".Description p");
   const joinBtn = document.getElementById("join");
+  const saveBtn = document.getElementById("saveBtn");
+  const deleteBtn = document.getElementById("deleteBtn");
+  const backBtn = document.getElementById("backBtn");
+  const clearLogBtn = document.getElementById("clearlog");
   const logOutput = document.getElementById("logOutput");
+  const descriptionBox = document.querySelector(".Description p");
 
-  // === Data model ===
-  let objects = [];
+  const deviceList = { Router: [0], Server: [0], Switch: [0], PC: [0] };
+  let devices = [];   
+  let edges = [];
   let dragging = null;
   let offsetX = 0, offsetY = 0;
+  let linkMode = false;
+  let linkStart = null;
 
-  // === Helpers ===
-  function addLog(message, type = "info") {
-    const logEntry = document.createElement("div");
-    logEntry.classList.add("log", type);
-    const timestamp = new Date().toLocaleTimeString();
-    const userName = "Zurus06";
-    logEntry.textContent = `${userName}# ${message}`;
-    logOutput.appendChild(logEntry);
+  const simulationId = new URLSearchParams(window.location.search).get("id");
+
+  const deviceDescriptions = {
+    PC: "A user-end device that connects to the network.",
+    Switch: "Connects multiple devices within a LAN.",
+    Router: "Routes data between networks.",
+    Server: "Provides data or services to clients."
+  };
+
+  function addLog(msg, type = "info") {
+    const entry = document.createElement("div");
+    entry.className = `log ${type}`;
+    entry.textContent = `> ${msg}`;
+    logOutput.appendChild(entry);
     logOutput.scrollTop = logOutput.scrollHeight;
   }
 
-  function drawLine(x1, y1, x2, y2, color = "green", width = 2) {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.stroke();
-  }
-
-  // === Device Description Handling ===
-  devices.forEach(device => {
-    device.addEventListener("click", () => {
-      const type = device.dataset.device;
-      const desc = deviceDescriptions[type] || "No description available.";
-      if (descriptionBox) descriptionBox.innerHTML = desc;
-    });
-  });
-
-  // === Link Mode Toggle ===
-  joinBtn.addEventListener("click", () => {
-    link = !link;
-    joinBtn.classList.toggle("active");
-    addLog(link ? "Link mode activated. Click two devices to connect." : "Link mode deactivated.");
-    start = null;
-  });
-
-  // === Canvas Sizing ===
   function fixCanvasResolution() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    redraw();
+    redraw(ctx, canvas, devices, edges);
   }
   fixCanvasResolution();
   window.addEventListener("resize", fixCanvasResolution);
 
-  // === Drag & Drop from Sidebar ===
-  devices.forEach(device => {
-    device.addEventListener("dragstart", e => {
-      if (link) return;
-      e.dataTransfer.setData("device", device.dataset.device);
+  // wire device palette clicks and drags
+  document.querySelectorAll(".device").forEach(node => {
+    node.addEventListener("click", () => {
+      const t = node.dataset.device;
+      descriptionBox.innerHTML = deviceDescriptions[t] || "No description";
+    });
+
+    node.addEventListener("dragstart", e => {
+      if (linkMode) return;
+      e.dataTransfer.setData("device", node.dataset.device);
     });
   });
 
-  canvas.addEventListener("dragover", e => {
-    if (!link) e.preventDefault();
-  });
-
+  // drop onto canvas
+  canvas.addEventListener("dragover", e => e.preventDefault());
   canvas.addEventListener("drop", e => {
-    if (link) return;
+    if (linkMode) return;
     e.preventDefault();
-    const deviceType = e.dataTransfer.getData("device");
-    if (!deviceType) return;
+
+    const type = e.dataTransfer.getData("device");
+    if (!type) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const nextId = deviceList[deviceType][deviceList[deviceType].length - 1] + 1;
-    deviceList[deviceType].push(nextId);
+    // compute next id for that type
+    if (!deviceList[type]) deviceList[type] = [0];
+    const ids = deviceList[type];
+    const nextId = (ids.length ? ids[ids.length - 1] : 0) + 1;
+    ids.push(nextId);
 
-    objects.push({
+    const device = {
+      Type: type,
       Id: nextId,
-      Type: deviceType,
       X: x - 20,
       Y: y - 20,
       Width: 40,
       Height: 40
-    });
+    };
 
-    addLog(`${deviceType} ${nextId} added to simulation area`, "success");
-    redraw();
+    devices.push(device);
+
+    addLog(`${type} ${nextId} added`, "success");
+    redraw(ctx, canvas, devices, edges);
   });
 
-  // === Drawing Devices ===
-  function drawDeviceIcon(ctx, obj) {
-    ctx.save();
-    ctx.translate(obj.X, obj.Y);
-
-    switch (obj.Type) {
-      case "PC":
-        ctx.fillStyle = "lightblue";
-        ctx.fillRect(0, 0, obj.Width, obj.Height - 10);
-        ctx.fillStyle = "gray";
-        ctx.fillRect(10, obj.Height - 10, obj.Width - 20, 10);
-        break;
-
-      case "Switch":
-        ctx.fillStyle = "orange";
-        ctx.fillRect(0, 0, obj.Width, obj.Height);
-        ctx.fillStyle = "black";
-        for (let i = 5; i < obj.Width; i += 10)
-          ctx.fillRect(i, obj.Height / 2 - 2, 4, 4);
-        break;
-
-      case "Router":
-        ctx.fillStyle = "green";
-        ctx.beginPath();
-        ctx.arc(obj.Width / 2, obj.Height / 2, obj.Width / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "white";
-        ctx.font = "bold 12px monospace";
-        ctx.fillText("R", obj.Width / 2 - 4, obj.Height / 2 + 4);
-        break;
-
-      case "Server":
-        ctx.fillStyle = "purple";
-        ctx.fillRect(0, 0, obj.Width, obj.Height);
-        ctx.fillStyle = "white";
-        ctx.font = "bold 11px monospace";
-        ctx.fillText("SV", 5, obj.Height / 2 + 4);
-        break;
-    }
-
-    ctx.restore();
-  }
-
-  // === Redraw everything ===
-  function redraw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    edgeList.forEach(edge => {
-      const from = edge.from;
-      const to = edge.to;
-      drawLine(
-        from.X + from.Width / 2, from.Y + from.Height / 2,
-        to.X + to.Width / 2, to.Y + to.Height / 2
-      );
-    });
-
-    objects.forEach(obj => {
-      drawDeviceIcon(ctx, obj);
-      ctx.fillStyle = "black";
-      ctx.font = "12px monospace";
-      const labelY = Math.min(obj.Y + obj.Height + 12, canvas.height - 5);
-      ctx.fillText(`${obj.Type} ${obj.Id}`, obj.X, labelY);
-    });
-  }
-
-  // === Hit detection ===
-  function getObjectAt(x, y) {
-    return objects.find(obj =>
-      x >= obj.X && x <= obj.X + obj.Width &&
-      y >= obj.Y && y <= obj.Y + obj.Height
-    );
-  }
-
-  // === Mouse Events ===
+  // mouse interactions: move, delete, link
   canvas.addEventListener("mousedown", e => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const obj = getObjectAt(x, y);
+    const obj = getObjectAt(devices, x, y);
 
-    if (!link) {
+    // not in link mode -> move or delete on right click
+    if (!linkMode) {
       if (e.button === 0 && obj) {
         dragging = obj;
         offsetX = x - obj.X;
         offsetY = y - obj.Y;
       } else if (e.button === 2 && obj) {
-        objects = objects.filter(o => o !== obj);
-        edgeList = edgeList.filter(edge => edge.from !== obj && edge.to !== obj);
-        addLog(`${obj.Type} ${obj.Id} deleted`, "error");
-        redraw();
-      }
-    } else {
-      const selectedObject = getObjectAt(x, y);
-      if (!selectedObject) return;
+        // delete device and all edges referencing it
+        devices = devices.filter(d => !(d.Type === obj.Type && d.Id === obj.Id));
 
-      if (start === null) {
-        start = selectedObject;
-      } else if (start === selectedObject) {
-        addLog("You clicked the same device again — link canceled", "error");
-        start = null;
-      } else {
-        const exists = edgeList.some(o =>
-          (o.from === start && o.to === selectedObject) ||
-          (o.to === start && o.from === selectedObject)
+        edges = edges.filter(edge =>
+          !(edge.from.Type === obj.Type && edge.from.Id === obj.Id) &&
+          !(edge.to.Type === obj.Type && edge.to.Id === obj.Id)
         );
-        if (!exists) {
-          edgeList.push({ from: start, to: selectedObject });
-          addLog(`Linked ${start.Type} ${start.Id} → ${selectedObject.Type} ${selectedObject.Id}`, "success");
-          start = null;
-          redraw();
-        } else {
-          addLog(`Link already exists between ${start.Type} ${start.Id} and ${selectedObject.Type} ${selectedObject.Id}`, "error");
-          start = null;
-        }
+
+        addLog(`${obj.Type} ${obj.Id} deleted`, "error");
+        redraw(ctx, canvas, devices, edges);
       }
+      return;
+    }
+
+    // link mode
+    if (linkMode) {
+      if (!obj) return;
+
+      if (!linkStart) {
+        linkStart = obj;
+        addLog(`Selected ${obj.Type} ${obj.Id} as link start`, "info");
+        return;
+      }
+
+      // clicked target
+      const target = obj;
+
+      // same device => cancel
+      if (linkStart.Type === target.Type && linkStart.Id === target.Id) {
+        addLog("Cannot link device to itself", "error");
+        linkStart = null;
+        return;
+      }
+
+      // check existing (bidirectional check)
+      const exists = edges.some(e =>
+        (e.from.Type === linkStart.Type && e.from.Id === linkStart.Id && e.to.Type === target.Type && e.to.Id === target.Id) ||
+        (e.to.Type === linkStart.Type && e.to.Id === linkStart.Id && e.from.Type === target.Type && e.from.Id === target.Id)
+      );
+
+      if (!exists) {
+        edges.push({
+          from: { Type: linkStart.Type, Id: linkStart.Id },
+          to:   { Type: target.Type, Id: target.Id }
+        });
+        addLog(`Linked ${linkStart.Type} ${linkStart.Id} → ${target.Type} ${target.Id}`, "success");
+        redraw(ctx, canvas, devices, edges);
+      } else {
+        addLog("Link already exists", "info");
+      }
+
+      linkStart = null;
     }
   });
 
@@ -248,16 +168,146 @@ window.addEventListener("DOMContentLoaded", () => {
     const rect = canvas.getBoundingClientRect();
     dragging.X = e.clientX - rect.left - offsetX;
     dragging.Y = e.clientY - rect.top - offsetY;
-    redraw();
+    redraw(ctx, canvas, devices, edges);
   });
 
   canvas.addEventListener("mouseup", () => dragging = null);
   canvas.addEventListener("contextmenu", e => e.preventDefault());
 
-  // === Clear Log Button ===
-  document.getElementById("clearlog").addEventListener("click", () => {
+  if (clearLogBtn) clearLogBtn.addEventListener("click", () => {
     logOutput.replaceChildren();
-    addLog("Console cleared.");
+    addLog("Console cleared");
   });
 
+  joinBtn.addEventListener("click", () => {
+    linkMode = !linkMode;
+    joinBtn.classList.toggle("active");
+    linkStart = null;
+    addLog(linkMode ? "Link mode ON" : "Link mode OFF");
+  });
+
+  function rebuildDeviceListFromDevices() {
+    for (const k of Object.keys(deviceList)) {
+      deviceList[k] = [0];
+    }
+    devices.forEach(d => {
+      if (!deviceList[d.Type]) deviceList[d.Type] = [0];
+      deviceList[d.Type].push(d.Id);
+    });
+  }
+
+  async function loadSimulation() {
+    if (!simulationId) {
+      addLog("No simulation ID provided in URL", "info");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5245/diagrams/${simulationId}`, {
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+
+      const body = await res.json();
+      const sim = body && body.data;
+      if (!sim) {
+        addLog("Simulation not found", "error");
+        return;
+      }
+
+      if (!sim.dataJson) {
+        addLog("Simulation has no saved data", "info");
+        return;
+      }
+
+      const parsed = JSON.parse(sim.dataJson);
+      devices = parsed.devices || [];
+      edges = parsed.links || [];
+
+      devices = devices.map(d => ({
+        Type: d.Type,
+        Id: typeof d.Id === "string" ? parseInt(d.Id, 10) : d.Id,
+        X: Number(d.X),
+        Y: Number(d.Y),
+        Width: Number(d.Width || 40),
+        Height: Number(d.Height || 40)
+      }));
+
+      edges = edges.map(e => ({
+        from: { Type: e.from.Type, Id: typeof e.from.Id === "string" ? parseInt(e.from.Id, 10) : e.from.Id },
+        to:   { Type: e.to.Type,   Id: typeof e.to.Id === "string"   ? parseInt(e.to.Id, 10)   : e.to.Id }
+      }));
+
+      rebuildDeviceListFromDevices();
+      redraw(ctx, canvas, devices, edges);
+      addLog("Simulation loaded successfully", "success");
+    } catch (err) {
+      addLog("Could not load simulation: " + (err.message || err), "error");
+    }
+  }
+  loadSimulation();
+
+  // ========== SAVE SIMULATION ==========
+  saveBtn.addEventListener("click", async () => {
+    if (!simulationId) return addLog("Missing simulation ID", "error");
+
+    const payload = {
+      dataJson: JSON.stringify({
+        devices: devices,
+        links: edges
+      })
+    };
+
+    try {
+      const res = await fetch(`http://localhost:5245/diagrams/${simulationId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+
+      addLog("Simulation saved successfully", "success");
+    } catch (err) {
+      addLog("Error saving simulation: " + (err.message || err), "error");
+    }
+  });
+
+  // ========== DELETE SIMULATION ==========
+  if (deleteBtn) {
+    deleteBtn.addEventListener("click", async () => {
+      if (!simulationId) return addLog("Missing simulation ID", "error");
+      if (!confirm("Are you sure you want to delete this simulation?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:5245/diagrams/${simulationId}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(txt || `HTTP ${res.status}`);
+        }
+
+        addLog("Simulation deleted", "success");
+        window.location.href = "simulations.html";
+      } catch (err) {
+        addLog("Error deleting simulation: " + (err.message || err), "error");
+      }
+    });
+  }
+
+  // optional back button
+  if (backBtn) backBtn.addEventListener("click", () => {
+    window.location.href = "simulations.html";
+  });
 });

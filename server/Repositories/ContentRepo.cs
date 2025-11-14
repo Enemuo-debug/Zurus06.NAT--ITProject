@@ -17,7 +17,7 @@ namespace server.Repositories
             context = _context;
         }
 
-        public async Task<NATContent?> CreateNewContent(NewContentDto newContentDto, string userId, string url = null)
+        public async Task<NATContent?> CreateNewContent(NewContentDto newContentDto, string userId, string url = "")
         {
             newContentDto = newContentDto.EncryptContentDto();
             var newContent = new NATContent
@@ -39,18 +39,8 @@ namespace server.Repositories
         public async Task<OutputContentGroup?> GetContentById(int contentId, ISimulation nS)
         {
             var output = await context.Contents.FindAsync(contentId);
-            return await output.DecryptContentDto(nS);
-        }
-        public async Task<bool> UpdateContent(NATContent updatedContent, int contentId, bool save)
-        {
-            NATContent? content = await GetContentById(contentId);
-            if (content == null) return false;
-            content.Content = Cipher.HillCipherEncrypt(updatedContent.Content);
-            content.ImgLink = updatedContent.ImgLink;
-            content.simUUID = updatedContent.simUUID;
-            context.Contents.Update(content);
-            if (save) await context.SaveChangesAsync();
-            return true;
+            if (output == null) return null;
+            return await output!.DecryptContentDto(nS);
         }
         public async Task<Tuple<int, bool>> DeleteContent(int contentId, bool save)
         {
@@ -63,12 +53,10 @@ namespace server.Repositories
         }
         public async Task<bool> ClearUnusedContents(string userId)
         {
-            // Step 1: Query database for matching contents
             var contents = await context.Contents
                 .Where(c => c.Owner == userId)
                 .ToListAsync();
 
-            // Step 2: If nothing found, you can safely return
             if (contents.Count == 0)
                 return true;
 
@@ -77,8 +65,7 @@ namespace server.Repositories
                 var content = contents[i];
 
                 // Step 3: Check if this content is linked to any post or content
-                bool isLinked = await context.Posts.AnyAsync(p => p.Content == content.Id) ||
-                                await context.Contents.AnyAsync(c => c.Link == content.Id);
+                bool isLinked = await context.Posts.AnyAsync(p => p.Content == content.Id) || await context.Contents.AnyAsync(c => c.Link == content.Id);
                 if (!isLinked)
                 {
                     context.Contents.Remove(content);

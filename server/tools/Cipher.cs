@@ -13,9 +13,6 @@ namespace server.tools
             string plainText = "This is Nigeria and everybody is a criminal___";
             string cipherText = HillCipherEncrypt(plainText);
             string decryptedText = HillCipherDecrypt(cipherText);
-            Console.WriteLine(plainText);
-            Console.WriteLine(cipherText);
-            Console.WriteLine(decryptedText);
         }
 
         public static uint EuclideanAlgorithm(uint a, uint b)

@@ -1,0 +1,79 @@
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #000000;
+    margin: 0;
+    padding: 20px;
+}
+h1 {
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.post-card {
+    background: none;
+    border: 1px solid white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.2s ease;
+}
+nav a {
+    display: inline-block;
+    color: #ffffff;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: 600;
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid white;
+    margin-bottom: 30px;
+}
+
+h1 {
+    color: #ffffff;
+    font-size: 24px;
+    margin: 0;
+}
+
+nav a {
+    display: inline-block;
+    color: #ffffff;
+    text-decoration: none;
+    margin-left: 15px;
+    font-weight: 600;
+}
+.post-card:hover {
+    transform: translateY(-4px);
+}
+.caption {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+.intro {
+    color: #ffffff;
+    margin-bottom: 15px;
+}
+.btn {
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn:hover {
+    background-color: #000000;
+    color: #ffffff;
+}

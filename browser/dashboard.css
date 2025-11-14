@@ -117,7 +117,65 @@ aside {
     color: var(--accent-light);
 }
 
-/* --- Create Post Card --- */
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #141417;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.4rem 0.6rem;
+    max-width: 400px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 rgba(0, 188, 212, 0);
+}
+
+.search-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.4);
+}
+
+.search-bar {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    padding: 0.55rem 0.6rem;
+    line-height: 1.2;
+}
+
+.search-bar::placeholder {
+    color: #888;
+    transition: color 0.3s;
+}
+
+.search-bar:focus::placeholder {
+    color: var(--accent-light);
+}
+
+#search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1;
+}
+
+#search:hover {
+    background: var(--accent-light);
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
 .create-post-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border);

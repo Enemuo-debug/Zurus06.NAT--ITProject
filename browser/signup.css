@@ -81,6 +81,11 @@
       outline: none;
       transition: 0.3s;
     }
+    
+    option {
+      background: var(--black);
+      color: var(--white);
+    }
 
     input:focus,
     textarea:focus,

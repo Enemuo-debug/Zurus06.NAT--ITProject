@@ -10,10 +10,9 @@ namespace server.Interfaces
 {
     public interface IContent
     {
-        Task<NATContent?> CreateNewContent(NewContentDto newContentDto, string userId, string url = null);
+        Task<NATContent?> CreateNewContent(NewContentDto newContentDto, string userId, string url = "");
         Task<NATContent?> GetContentById(int contentId);
         Task<OutputContentGroup?> GetContentById(int contentId, ISimulation nS);
-        Task<bool> UpdateContent(NATContent updatedContent, int contentId, bool save);
         Task<Tuple<int, bool>> DeleteContent(int contentId, bool save);
         Task<bool> ClearUnusedContents(string userId);
     }

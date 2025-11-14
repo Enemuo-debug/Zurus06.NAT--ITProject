@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using server.dtos;
 using server.NATModels;
 using server.tools;
@@ -43,11 +40,12 @@ namespace server.controllers
             string? code = await ecv.CreateCode(verifyEmailDto.EmailAddress);
             if (string.IsNullOrEmpty(code))
             {
-                return BadRequest("The email you have provided is already exists on an account");
+                return BadRequest(new HTTPResponseStructure(false, "This email address has been linked to an account already"));
             }
             string Body = ecv.GenerateBody(code);
             await emailService.SendEmailAsync(verifyEmailDto.EmailAddress, Subject, Body);
-            return Ok($"Email verification code has been sent to {verifyEmailDto.EmailAddress}");
+            HTTPResponseStructure response = new HTTPResponseStructure(true, "Email verification code sent successfully");
+            return Ok(response);
         }
         [HttpPost("create/{id}")]
         public async Task<IActionResult> CreateAccount([FromBody] CreateAccountDto createAccountDto, [FromRoute] string id)
@@ -62,10 +60,23 @@ namespace server.controllers
                 niche = (Niche) createAccountDto.Niche
             };
             // Verify the code
-            if (!await ecv.VerifyCode(createAccountDto.EmailAddress, id)) return Unauthorized("Incorrect code");
+            if (!await ecv.VerifyCode(createAccountDto.EmailAddress, id))
+            {
+                HTTPResponseStructure responseStructure = new HTTPResponseStructure(false, "The verification code is invalid or has expired");
+                return BadRequest(responseStructure);
+            }
             var createdUser = await userManager.CreateAsync(newUser, createAccountDto.Password);
-            if (createdUser.Succeeded) return Ok("New User has been created successfully");
-            return BadRequest(createdUser.Errors.Select(e=>e.Description));
+            HTTPResponseStructure response;
+            if (createdUser.Succeeded)
+            {
+                response = new HTTPResponseStructure(true, "Account created successfully");
+                return Ok(response);
+            }
+            else
+            {
+                response = new HTTPResponseStructure(false, "Account creation failed", createdUser.Errors);
+                return BadRequest(response);
+            }
         }
         [HttpPost]
         [Route("login")]
@@ -93,7 +104,8 @@ namespace server.controllers
                 };
 
                 Response.Cookies.Append("NAT-Authentication", token, cookieOptions);
-                return Ok(new { message = "Login Successful" });
+                HTTPResponseStructure response = new HTTPResponseStructure(true, "Login successful");
+                return Ok(response);
             }
             return Unauthorized("Incorrect username or password");
         }
@@ -103,21 +115,38 @@ namespace server.controllers
         public async Task<IActionResult> GetUserDetails([FromRoute] string id)
         {
             var user = await userManager.FindByIdAsync(id);
-            if (user == null) return NotFound("User not found");
-            return Ok(user.UserDetails());
+            HTTPResponseStructure response;
+            if (user == null)
+            {
+                response = new HTTPResponseStructure(false, "User not found");
+                return NotFound(response);
+            }
+            response = new HTTPResponseStructure(true, "User Details fetched Successfully", user.UserDetails());
+            return Ok(response);
         }
 
         // Get the current logged in user details
+        [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUserDetails()
         {
             var email = User.GetUserEmail();
-            if (string.IsNullOrEmpty(email)) return Unauthorized("You are not logged in");
+            HTTPResponseStructure response;
+            if (string.IsNullOrEmpty(email))
+            {
+                response = new HTTPResponseStructure(false, "Unauthorized access");
+                return Unauthorized(response);
+            }
             var user = await userManager.FindByEmailAsync(email);
-            if (user == null) return Unauthorized("User not found");
+            if (user == null)
+            {
+                response = new HTTPResponseStructure(false, "User not found");
+                return NotFound(response);
+            }
             List<OutputPostDto> userPosts = await postsRepo.GetAllUsersPosts(user.Id);
             UserDetailsDto userDetailsDto = JointMapper.MapToUserDetailsDto(user.UserDetails(), userPosts);
-            return Ok(userDetailsDto);
+            response = new HTTPResponseStructure(true, "Current User Details fetched Successfully", userDetailsDto);
+            return Ok(response);
         }
 
         [HttpGet("logout")]

@@ -4,13 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zurus06.NAT | Dashboard</title>
-  ,<link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
   <header>
     <h1>Zurus06.NAT Dashboard</h1>
+
+    <form class="search-container">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 15a5 5 0 110-10 5 5 0 010 10z"/>
+      </svg>
+      <input class="search-bar" type="text" placeholder="Search for fellow engineers..."/>
+    </form>
+
     <nav>
-      <button>LOG OUT</button>
+      <button id="logout">LOG OUT</button>
     </nav>
   </header>
 
@@ -21,24 +29,25 @@
         <h2 id="username">Loading...</h2>
         <p id="userbio"></p>
         <p id="userjoined"></p>
+        <p id="userNiche"></p>
       </div>
 
       <div class="sidebar-links">
-        <a href="#">Network Simulations</a>
-        <a href="/readme_github_file">Help</a>
+        <a href="/browser/simulations.html">Network Simulations</a>
+        <a href="/browser/posts.html">Explore Posts</a>
+        <a href="https://github.com/Enemuo-debug/Zurus06.NAT--ITProject/blob/main/readme.md">Help</a>
       </div>
     </aside>
 
     <section class="content">
       <h2 class="section-title">My Posts</h2>
 
-      <!-- 🧠 Create New Post Card -->
       <div class="create-post-card">
         <h3>+ Create New Post</h3>
         <form id="createPostForm">
           <input type="text" id="postTitle" placeholder="Enter Post Title" required />
           <textarea id="postIntro" placeholder="Write a short intro..." rows="3" required></textarea>
-          <button type="submit">Create Post</button>
+          <button type="submit" id="createpost">Create Post</button>
         </form>
       </div>
 
@@ -73,20 +82,21 @@
           credentials: "include"
         });
 
-        if (response.status === 401) {
+        if (response.status !== 200) {
           alert("You are not logged in. Please sign in again.");
           window.location.href = "/browser/signin.html";
           return;
         }
 
         const userData = await response.json();
-        const user = userData.userDetails;
-        console.log(userData.userDetails);
+        const user = userData.data.userDetails;
 
         document.getElementById("username").textContent = user.displayName;
         document.getElementById("userbio").textContent = user.bio || "No bio available.";
         document.getElementById("userjoined").textContent =
-          "Joined: " + new Date(user.joinedAt).toDateString();
+          "Joined: " + user.joinedAt.split(" ").join("-");
+        document.getElementById("userNiche").textContent =
+          "Niche: " + user.niche;
 
         const nicheKey = Object.keys(diceBearStyles).find(k =>
           user.niche && user.niche.toLowerCase().includes(k.toLowerCase())
@@ -94,12 +104,21 @@
         const style = diceBearStyles[nicheKey];
         const seed = encodeURIComponent(user.displayName || "user");
         avatarImg.src = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4`;
-
-        renderPosts(userData.userPosts || []);
+        console.log(userData.data.userPosts)
+        renderPosts(userData.data.userPosts.reverse() || []);
       } catch (error) {
         postsContainer.innerHTML = `<p style="color:red;">Error loading dashboard: ${error.message}</p>`;
       }
     }
+
+    document.getElementById("logout").addEventListener("click", async (e) => {
+      await fetch("http://localhost:5245/account/logout", {
+        method: "GET", 
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+      window.location = "/browser/signin"
+    })
 
     function renderPosts(posts) {
       postsContainer.innerHTML = "";
@@ -115,11 +134,39 @@
           <h3>${post.caption}</h3>
           <p class="intro">${post.intro}</p>
           <div class="post-actions">
-            <button class="edit-btn" data-id="${post.id}">Edit</button>
-            <button class="delete-btn" data-id="${post.id}">Delete</button>
+        <button class="edit-btn" data-id="${post.id}">Edit</button>
+        <button class="delete-btn" data-id="${post.id}">Delete</button>
           </div>
         `;
         postsContainer.appendChild(postDiv);
+
+        // Attach delete event to the delete button inside this postDiv
+        const deleteBtn = postDiv.querySelector(".delete-btn");
+        deleteBtn.addEventListener("click", async (e) => {
+          const postId = e.target.dataset.id;
+            if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+            return;
+            }
+            try {
+              const response = await fetch(`http://localhost:5245/posts/${postId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include"
+              });
+              if (!response.ok || response.status != 200) throw new Error("Failed to delete post");
+              postDiv.remove();
+            } 
+            catch (err) {
+              alert("Error deleting post: " + err.message);
+            }
+          });
+
+          const editBtn = postDiv.querySelector(".edit-btn");
+          editBtn.addEventListener("click", (e) => {
+            const postId = e.target.dataset.id;
+            // Redirect to edit page with the post ID as a URL parameter
+            window.location.href = `/browser/editpost.html?id=${postId}`;
+          });
       });
     }
 
@@ -127,9 +174,10 @@
       e.preventDefault();
       const title = document.getElementById("postTitle").value.trim();
       const intro = document.getElementById("postIntro").value.trim();
+      console.log(title, intro);
 
       try {
-        const res = await fetch("http://localhost:5245/posts/create", {
+        const res = await fetch("http://localhost:5245/posts/new", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -138,18 +186,7 @@
 
         if (!res.ok) throw new Error("Failed to create post");
         const newPost = await res.json();
-
-        const newDiv = document.createElement("div");
-        newDiv.classList.add("post");
-        newDiv.innerHTML = `
-          <h3>${newPost.caption}</h3>
-          <p class="intro">${newPost.intro}</p>
-          <div class="post-actions">
-            <button class="edit-btn" data-id="${newPost.id}">Edit</button>
-            <button class="delete-btn" data-id="${newPost.id}">Delete</button>
-          </div>
-        `;
-        postsContainer.prepend(newDiv);
+        window.location.href = `/browser/editpost.html?id=${newPost.id}`;
         e.target.reset();
       } catch (err) {
         alert("Error: " + err.message);

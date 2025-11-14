@@ -8,6 +8,15 @@
   <link rel="stylesheet" href="signin.css" />
 </head>
 <body>
+<header>
+    <h1>Welcome to Zurus06.NAT</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="posts.html">Posts</a>
+    </nav>
+</header>
+<div class="sub-body">
   <div class="container">
     <div class="tabs">
       <div class="tab active" id="verifyTab">Email Verify</div>
@@ -31,6 +40,7 @@
       <button type="submit" id="signInButton">Login</button>
       <small><a href="#" id="goToVerify">Sign Up?</a></small>
     </form>
+  </div>
   </div>
 
   <script>
@@ -68,26 +78,47 @@
 
     // Email Verification
     verifyForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('verifyEmail').value.trim();
-      if (!email) return alert('Please enter a valid email');
+            e.preventDefault();
+            verifyForm.querySelector('button').disabled = true;
+            verifyForm.querySelector('button').textContent = "Sending...";
+            const email = document.getElementById('verifyEmail').value.trim();
+            if (!email) return alert('Please enter a valid email');
 
-      try {
-            const response = await fetch('http://localhost:5245/account/email-verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ EmailAddress: email })
-            });
-            const message = await response.text();
-            alert(message);
-          } catch (err) {
-            alert('Error: ' + err.message);
-          }
+            try {
+        const response = await fetch('http://localhost:5245/account/email-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ EmailAddress: email })
         });
+
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error("Invalid JSON returned from server");
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || "Server error");
+        }
+
+        console.log(data);
+        alert(data.message);
+
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        const btn = verifyForm.querySelector("button");
+        btn.disabled = false;
+        btn.textContent = "Send Verification Code";
+      }
+    });
 
         // Sign In
         signinForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          signinForm.querySelector('button').disabled = true;
+          signinForm.querySelector('button').textContent = "Signing In...";
           const email = document.getElementById('signinEmail').value.trim();
           const password = document.getElementById('signinPassword').value.trim();
           if (!email || !password) return alert('Please fill all fields');
@@ -103,17 +134,21 @@
                 if (!response.ok) {
                   const errData = await response.text();
                   alert(errData);
+                  signinForm.querySelector('button').disabled = false;
+                  signinForm.querySelector('button').textContent = "Login";
                   return;
                 }
 
-                const data = await response.json(); // parse JSON
-                alert(data.message); // only show message text
+                const data = await response.json();
+                alert(data.message);
 
                 window.location = "/browser/dashboard.html";
               } catch (err) {
                 alert('Login failed: ' + err.message);
+                signinForm.querySelector('button').disabled = false;
+                signinForm.querySelector('button').textContent = "Login";
               }
               });
   </script>
-</body>
+  </body>
 </html>

@@ -1,118 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create/Edit Post</title>
-<style>
-:root {
-  --bg:#1e1e1e;--muted:#2f2f2f;--accent:#569CD6;--accent-2:#DCDCAA;
-  --neutral:#D4D4D4;--success:#4EC9B0;--panel-radius:10px;
-}
-*{box-sizing:border-box;font-family:system-ui,monospace;}
-body{
-  margin:0;display:flex;align-items:stretch;min-height:100vh;
-  background:var(--bg);color:var(--neutral);
-}
-.app{
-  display:grid;
-  grid-template-columns:250px 1fr 300px;
-  gap:14px;
-  padding:16px;
-  width:100%;
-}
-.panel{background:#272727;border-radius:var(--panel-radius);padding:14px;}
-.left,.right,.center{display:flex;flex-direction:column;gap:12px;}
-.center{overflow:auto;}
-.profile{text-align:center;}
-.avatar{width:80px;height:80px;border-radius:50%;margin:auto;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  display:flex;align-items:center;justify-content:center;font-weight:bold;color:#000;}
-.username{margin-top:8px;color:var(--accent);}
-.card{
-  background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;
-  cursor:pointer;transition:0.2s;border:1px solid transparent;
-}
-.card:hover{border-color:var(--accent);}
-.card.active{border-color:var(--success);}
-input,textarea,select{
-  background:var(--muted);border:none;color:var(--neutral);
-  padding:8px;border-radius:6px;font-size:14px;
-}
-button{
-  background:var(--accent);border:none;color:#000;padding:8px 12px;
-  border-radius:8px;cursor:pointer;font-weight:600;
-}
-button:hover{background:var(--success);}
-@media(max-width:950px){.app{grid-template-columns:1fr;}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT Post</title>
+  <link rel="stylesheet" href="post.css" />
 </head>
 <body>
-<div class="app">
-  <aside class="panel left">
-    <div class="profile">
-      <div class="avatar">ZM</div>
-      <div class="username">@Zurus06</div>
-      <p style="font-size:13px;">Tech creator. Building simulations and ideas for the web.</p>
-    </div>
-  </aside>
+  <header>
+    <h1>Zurus06.NAT Posts</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="signin.html">Login</a>
+    </nav>
+  </header>
+  <div class="container" id="postContainer"></div>
 
-  <main class="panel center">
-    <div id="feed"></div>
-  </main>
+  <script>
+    async function loadPost() {
+      const params = new URLSearchParams(window.location.search);
+      const postId = parseInt(params.get("id"));
+      const post = await fetch(`http://localhost:5245/posts/${postId}`)
+        .then(res => res.json())
+        .catch(() => null);
 
-  <aside class="panel right">
-    <h3 style="color:var(--accent)">Create Post</h3>
-    <select id="type">
-      <option value="Text">Text</option>
-      <option value="Image">Image</option>
-      <option value="Simulation">Simulation</option>
-    </select>
-    <input id="title" placeholder="Title">
-    <textarea id="content" rows="4" placeholder="Write something..."></textarea>
-    <button id="addBtn">Add</button>
-    <button id="saveBtn">Save</button>
-  </aside>
+      console.log(post);
+      
+      const container = document.getElementById("postContainer");
 
-</div>
+      if (post) {
+        let html = `<h1>${post.caption}</h1><div class="intro">${post.intro}</div>`;
 
-<script>
-const feed=document.getElementById('feed');
-const addBtn=document.getElementById('addBtn');
-const saveBtn=document.getElementById('saveBtn');
-const title=document.getElementById('title');
-const content=document.getElementById('content');
-const type=document.getElementById('type');
-let selectedPost;
-let postContents=[];
+        post.contents.forEach(item => {
+          if (item.$type === "text") {
+            html += `<div class="content-text">${item.content}</div>`;
+          } else if (item.$type === "image") {
+            html += `
+              <div class="image-box">
+                <img src="${item.imgLink}" alt="${item.content}" />
+                <div class="caption">${item.content}</div>
+              </div>
+            `;
+          }
+        });
 
-addBtn.onclick=()=>{
-  const c=content.value.trim();
-  if(!c) return;
-  const post={id:Date.now(),content:c,type:type.value};
-  posts.push(post);
-  render();
-  title.value='';
-  content.value='';
-};
+        html += `<a href="posts.html" class="back-btn">← Back to Posts</a>`;
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = "<h2>Post not found</h2>";
+      }
+    }
 
-function render(){
-  feed.innerHTML='';
-  posts.forEach((p,i)=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=`<p>${p.content}</p>`;
-    card.onclick=()=>selectPost(i, card);
-    feed.appendChild(card);
-  });
-}
-
-function selectPost(i,el){
-  document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  const p=posts[i];
-  title.value=p.title;content.value=p.content;type.value=p.type;
-}
-</script>
+    loadPost();
+  </script>
 </body>
 </html>

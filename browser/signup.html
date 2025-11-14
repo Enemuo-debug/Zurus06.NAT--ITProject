@@ -82,9 +82,9 @@
         body: JSON.stringify(payload),
       });
 
-      const message = await response.text();
-      alert(message);
-      window.location = "/browser/index.html"
+      const message = await response.json();
+      alert(message.message);
+      window.location = "/browser/signin.html";
     });
   </script>
 </body>

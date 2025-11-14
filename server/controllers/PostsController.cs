@@ -1,19 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using server.Repositories;
 using server.Interfaces;
 using server.NATModels;
 using server.dtos;
 using Microsoft.AspNetCore.Mvc;
 using server.MappersAndExtensions;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 using server.tools;
 using Microsoft.AspNetCore.Identity;
-using server.data;
 
 namespace server.controllers
 {
@@ -78,7 +70,7 @@ namespace server.controllers
             }
             var cipherContent = await contentRepo.CreateNewContent(newContent, user.Id, url);
             if (cipherContent == null) return BadRequest("Could not create content");
-            var plainContent = await cipherContent.DecryptContentDto();
+            var plainContent = await cipherContent.DecryptContentDto(null!);
             return Ok(plainContent);
         }
         [HttpGet("{id:int}")]
@@ -110,46 +102,7 @@ namespace server.controllers
             editPost = editPost.EncryptPostDto();
             string email = User.GetUserEmail() ?? string.Empty;
             bool isUpdated = await postsRepo.UpdatePost(editPost, postId, email);
-            return isUpdated ? Ok("Post Successfully Updated!!!") : StatusCode(204, new { message = "The post is being modified by someone else at this time" });
-        }
-
-        [Authorize]
-        [HttpPut("edit-content/{contentId:int}")]
-        public async Task<IActionResult> EditContent([FromRoute] int contentId, [FromBody] EditContentDto updatedContentDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var user = await postsRepo.GetLoggedInUser(User);
-            if (user == null)
-                return BadRequest("This user no longer exists...");
-
-            var content = await contentRepo.GetContentById(contentId);
-            if (content == null || content.Owner == user.Id)
-                return BadRequest("The referenced content either doesn't exist or is not yours");
-
-            // Now we know type is valid
-            var type = Enum.Parse<ContentTypes>(updatedContentDto.type, true);
-
-            if (type == ContentTypes.Image || content.type == ContentTypes.Image)
-                return BadRequest("Image contents cannot be edited, only deleted");
-
-            // I think you meant "must be the same type"
-            if (content.type != type)
-                return BadRequest("Contents to be updated must be of the same types");
-
-            var updatedContent = new NATContent
-            {
-                type = type,
-                Content = updatedContentDto.Content,
-                simUUID = updatedContentDto.simUUID,
-                Owner = user.Id
-            };
-
-            bool didUpdate = await contentRepo.UpdateContent(updatedContent, contentId, true);
-            return didUpdate
-                ? Ok("Content Updated!!")
-                : StatusCode(500, new { message = "Content Update failed" });
+            return isUpdated ? Ok("Post Successfully Updated!!!") : StatusCode(403, new { message = "The post is being modified by someone else at this time" });
         }
 
         [Authorize]

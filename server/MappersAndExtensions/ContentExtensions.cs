@@ -17,7 +17,7 @@ namespace server.MappersAndExtensions
             return contentDto;
         }
 
-        public static async Task<OutputContentGroup> DecryptContentDto(this NATContent contentDto, ISimulation nS = null)
+        public static async Task<OutputContentGroup> DecryptContentDto(this NATContent contentDto, ISimulation nS)
         {
             switch (contentDto.type)
             {
@@ -27,22 +27,30 @@ namespace server.MappersAndExtensions
                         Id = contentDto.Id,
                         Content = Cipher.HillCipherDecrypt(contentDto.Content)
                     };
+
                 case ContentTypes.Image:
+                    if (string.IsNullOrEmpty(contentDto.Content))
+                        throw new FormatException("Invalid content format for Image type: missing encrypted caption or data.");
+
                     return new ImageContent
                     {
                         Id = contentDto.Id,
                         ImgLink = contentDto.ImgLink,
                         Content = Cipher.HillCipherDecrypt(contentDto.Content)
                     };
-                    throw new FormatException("Invalid content format for Image type.");
+
                 case ContentTypes.NATSimulation:
+                    if (nS == null)
+                        throw new ArgumentNullException(nameof(nS), "Simulation service cannot be null for NATSimulation content.");
+
                     return new NetContent
                     {
                         Id = contentDto.Id,
-                        NATSimulation = await nS.EmbedSimulation(contentDto.simUUID)
+                        NATSimulation = null // Simulation fetching logic can be implemented here if needed
                     };
+
                 default:
-                    throw new NotSupportedException($"Content type doesn't exist.");
+                    throw new NotSupportedException($"Unsupported content type: {contentDto.type}");
             }
         }
     }
