@@ -29,18 +29,9 @@ async function fetchPost() {
     titleInput.value = post.caption || "";
     introInput.value = post.intro || "";
 
-    mergedContents = (post.contents || []).map(c => {
-      return {
-        id: c.id,
-        isNew: false,
-        $type: (c.type || c.$type || "text").toLowerCase(),
-        content: c.content || c.text || "",
-        imgLink: c.imgLink || c.url || "",
-      };
-    });
+    mergedContents = (post.contents || []);
 
     renderContentCards();
-    console.log("Loaded post with contents:", mergedContents);
   } catch (err) {
     alert("Error loading post: " + err.message);
   }
@@ -81,10 +72,11 @@ saveBtn.addEventListener("click", async () => {
         } else if ((item.$type || item.type) === "text") {
           formData.append("type", "Text");
           formData.append("Content", item.content || "");
-        } else if ((item.$type || item.type) === "natsimulation" || (item.$type || item.type) === "simulation") {
+        }else if ((item.$type || item.type) === "net") {
           formData.append("type", "NATSimulation");
-          formData.append("simUUID", item.simUUID || item.simUUID);
-        } else {
+          formData.append("simUUID", item.code);
+        }
+        else {
           formData.append("type", "Text");
           formData.append("Content", item.content || "");
         }
@@ -113,7 +105,6 @@ saveBtn.addEventListener("click", async () => {
       }
     }
 
-    // Now update the post with ordered IDs
     const res = await fetch(`http://localhost:5245/posts/edit/${postId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -130,14 +121,12 @@ saveBtn.addEventListener("click", async () => {
     window.location.href = "dashboard.html";
   } catch (err) {
     alert("Error saving post: " + err.message);
-    console.error(err);
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Save Changes";
   }
 });
 
-// modal / content creation UI elements
 let selectedCardIndex = null;
 const modal = document.getElementById("contentModal");
 const openModalBtn = document.getElementById("openModalBtn");
@@ -154,8 +143,7 @@ contentTypeSelect.addEventListener("change", () => {
   document.getElementById("simInputGroup").style.display = type === "simulation" ? "" : "none";
 });
 
-// === Add new content ===
-document.getElementById("addContentBtn").addEventListener("click", () => {
+document.getElementById("addContentBtn").addEventListener("click", async () => {
   const type = contentTypeSelect.value;
   let newContent = null;
 
@@ -173,16 +161,35 @@ document.getElementById("addContentBtn").addEventListener("click", () => {
     newContent = { isNew: true, $type: "image", imgLink: imgURL, content: caption, file: fileInput.files[0] };
   } 
   else if (type === "simulation") {
-    const uuid = document.getElementById("simUUID").value.trim();
-    if (!uuid) return alert("Please enter the simulation UUID.");
-    newContent = { isNew: true, $type: "natsimulation", simUUID: uuid };
-  } else {
+      const uuid = document.getElementById("simUUID").value.trim();
+      if (!uuid) return alert("Please enter the simulation UUID.");
+
+      // Validate UUID with backend
+      const isValidJson = await fetch(
+          `http://localhost:5245/diagrams/verify-embed/${postId}`,
+          {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(uuid)
+          }
+      );
+
+      const isValid = await isValidJson.json();
+      if (!isValid.success) return alert("Invalid simulation embed");
+
+      newContent = { 
+          isNew: true, 
+          $type: "net", 
+          simUUID: isValid.data,
+          code: uuid
+      };
+  }  
+   else {
     return alert("Unknown type selected.");
   }
 
-  // push into mergedContents (keeps UI ordering simple)
   mergedContents.push(newContent);
-  console.log("New content added:", newContent);
   renderContentCards();
 
   document.getElementById("createPostForm").reset();
@@ -196,14 +203,18 @@ function renderContentCards() {
     const type = (content.$type || content.type || "").toLowerCase();
     const card = document.createElement("div");
     card.className = "content-card";
-    card.draggable = true;
+    card.draggable = false;
 
     // Build inner HTML safely (we're controlling values here)
     if (type === "text") {
       const safeText = escapeHtml(content.content || "");
       card.innerHTML = `
         <p><b>Text:</b> ${safeText}</p>
-        <button data-index="${index}" class="delete-btn">Delete</button>
+        <div class="card-buttons">
+          <button data-index="${index}" class="delete-btn">Delete</button>
+          <button class="swapUp">MOVE UP ⤊</button>
+          <button class="swapDown">MOVE DOWN ⤋</button>
+        </div>
       `;
     } 
     else if (type === "image") {
@@ -212,16 +223,29 @@ function renderContentCards() {
       card.innerHTML = `
         <img src="${imgSrc}" alt="Uploaded Image" width="120">
         <p><b>Caption:</b> ${safeCap}</p>
-        <button data-index="${index}" class="delete-btn">Delete</button>
+        <div>
+          <button data-index="${index}" class="delete-btn">Delete</button>
+          <button class="swapUp">MOVE UP ⤊</button>
+          <button class="swapDown">MOVE DOWN ⤋</button>
+        </div>
       `;
     } 
-    else if (type === "natsimulation" || type === "simulation") {
-      const uuid = escapeHtml(content.simUUID || content.NATSimulation || "");
+    else if (type === "net") {
+      const uuid = escapeHtml(content.natSimulation || "");
+      const parts = uuid.split("^");
+      const simName = parts[parts.length - 1];
+
       card.innerHTML = `
-        <p><b>Simulation UUID:</b> ${uuid}</p>
-        <button data-index="${index}" class="delete-btn">Delete</button>
+        <p><b>Simulation Name: ${simName}</b></p>
+        <canvas class="SimulationArea"></canvas>
+        <div>
+          <button data-index="${index}" class="delete-btn">Delete</button>
+          <button class="swapUp">MOVE UP ⤊</button>
+          <button class="swapDown">MOVE DOWN ⤋</button>
+        </div>
       `;
-    } 
+    }
+
     else {
       const json = escapeHtml(JSON.stringify(content));
       card.innerHTML = `
@@ -229,31 +253,27 @@ function renderContentCards() {
         <button data-index="${index}" class="delete-btn">Delete</button>
       `;
     }
+    cardsContainer.appendChild(card);
+  });
 
-    // drag handlers
-    card.addEventListener("dragstart", (e) => {
-      selectedCardIndex = index;
-      e.dataTransfer.effectAllowed = "move";
-    });
-
-    card.addEventListener("dragover", (e) => {
-      e.preventDefault();
-    });
-
-    card.addEventListener("drop", (e) => {
-      e.preventDefault();
-      if (selectedCardIndex === null || selectedCardIndex === index) return;
-
-      // swap in mergedContents
-      const tmp = mergedContents[selectedCardIndex];
-      mergedContents[selectedCardIndex] = mergedContents[index];
-      mergedContents[index] = tmp;
-
-      selectedCardIndex = null;
+  document.querySelectorAll(".swapUp").forEach((btn, idx) => {
+    btn.addEventListener("click", () => {
+      if (idx <= 0) return;
+      const tmp = mergedContents[idx - 1];
+      mergedContents[idx - 1] = mergedContents[idx];
+      mergedContents[idx] = tmp;
       renderContentCards();
     });
+  });
 
-    cardsContainer.appendChild(card);
+  document.querySelectorAll(".swapDown").forEach((btn, idx) => {
+    btn.addEventListener("click", () => {
+      if (idx >= mergedContents.length - 1) return;
+      const tmp = mergedContents[idx + 1];
+      mergedContents[idx + 1] = mergedContents[idx];
+      mergedContents[idx] = tmp;
+      renderContentCards();
+    });
   });
 
   // attach delete handlers (delegation-like)

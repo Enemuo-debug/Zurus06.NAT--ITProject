@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Page</title>
+  <link rel="stylesheet" href="creator.css" />
+</head>
+<body>
+  <header>
+    <h1 id="UserName">UserName</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="posts.html">Back to Posts</a>
+    </nav>
+  </header>
+  <div class="container">
+    <div class="bioData">
+        <img id="creatorAvatar" src="" alt="Creator Avatar" />
+        <div class="userData">
+            <h2 id="niche">Niche</h2>
+            <p id="bio">Bio</p>
+        </div>
+    </div>
+
+    <div class="postsSection">
+        <h1>Posts by User</h1>
+        <div class="postsContainer" id="postsContainer">
+            <em><h1>Login to view User Posts</h1></em>
+        </div>
+    </div>
+    </div>
+
+
+  <footer>
+    <p>&copy; 2025 Zurus06.NAT. All rights reserved.</p>
+    <p id="joinDate">Joined @ </p>
+  </footer>
+  <script>
+    async function loadUser() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        
+        const diceBearStyles = {
+            Network_Design: "notionists",
+            Network_Security: "fun-emoji",
+            Network_Management_And_Monitoring: "adventurer",
+            Network_Technology_And_Trends: "bottts",
+            Networking_Troubleshooting_And_Optimization: "avataaars"
+        };
+
+        if (!id) {
+            console.error("No user ID found in URL");
+            window.location.href = "index.html";    
+        }
+
+        try {
+        const response = await fetch(`http://localhost:5245/account/${id}`);
+        const user = await response.json();
+
+        document.getElementById("UserName").innerText = user.data.displayName;
+        document.getElementById("niche").innerText = user.data.niche;
+        document.getElementById("bio").innerText = user.data.bio;
+        const nicheKey = user.data.niche.split(" ").join("_");
+        const style = diceBearStyles[nicheKey];
+        let creatorImgLink = `https://api.dicebear.com/7.x/${style}/svg?seed=${user.data.displayName}&backgroundColor=transparent`;
+        document.getElementById("creatorAvatar").src = creatorImgLink;
+        document.getElementById("joinDate").innerText += `${user.data.joinedAt.split(" ").join("-")}`;
+
+        } catch (err) {
+        console.error("Failed to load user", err);
+        }
+        try {
+            const postsContainer = document.getElementById("postsContainer");
+            postsContainer.innerHTML = "<p>Loading posts...</p>";
+
+            const postsResponse = await fetch(`http://localhost:5245/posts/user/${id}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include"
+            });
+
+            if (!postsResponse.ok) {
+                throw new Error(`HTTP error! status: ${postsResponse.status}`);
+            }
+
+            const postsData = await postsResponse.json();
+
+            if (!postsData || postsData.length === 0) {
+                postsContainer.innerHTML = "<h2>No posts available.</h2>";
+                return;
+            }
+
+            let postsHTML = "";
+            postsData.forEach(post => {
+                postsHTML += `
+                    <div class="postCard">
+                        <h3>${post.caption}</h3>
+                        <p>${post.intro}</p>
+                        <a href="post.html?id=${post.id}">Read More</a>
+                    </div>
+                `;
+            });
+            postsContainer.innerHTML = postsHTML;
+
+        } catch (error) {
+            console.error("Failed to load posts:", error);
+            document.getElementById("postsContainer").innerHTML = "<h2>Error loading posts.</h2>";
+        }
+    }
+
+    loadUser();
+    </script>
+</body>
+</html>

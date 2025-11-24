@@ -67,11 +67,11 @@
     const avatarImg = document.getElementById("userAvatar");
 
     const diceBearStyles = {
-      "Network Design": "notionists",
-      "Network Security": "fun-emoji",
-      "Network Management And Monitoring": "adventurer",
-      "Network Technology And Trends": "bottts",
-      "Networking Troubleshooting And Optimization": "avataaars"
+      Network_Design: "notionists",
+      Network_Security: "fun-emoji",
+      Network_Management_And_Monitoring: "adventurer",
+      Network_Technology_And_Trends: "bottts",
+      Networking_Troubleshooting_And_Optimization: "avataaars"
     };
 
     async function loadDashboard() {
@@ -98,13 +98,9 @@
         document.getElementById("userNiche").textContent =
           "Niche: " + user.niche;
 
-        const nicheKey = Object.keys(diceBearStyles).find(k =>
-          user.niche && user.niche.toLowerCase().includes(k.toLowerCase())
-        );
+        const nicheKey = user.niche.split(" ").join("_");
         const style = diceBearStyles[nicheKey];
-        const seed = encodeURIComponent(user.displayName || "user");
-        avatarImg.src = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&backgroundColor=b6e3f4`;
-        console.log(userData.data.userPosts)
+        avatarImg.src = `https://api.dicebear.com/7.x/${style}/svg?seed=${user.displayName}&backgroundColor=transparent`;
         renderPosts(userData.data.userPosts.reverse() || []);
       } catch (error) {
         postsContainer.innerHTML = `<p style="color:red;">Error loading dashboard: ${error.message}</p>`;

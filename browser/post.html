@@ -17,15 +17,28 @@
   </header>
   <div class="container" id="postContainer"></div>
 
-  <script>
+  <script type="module">
+    import { redrawScaled } from "./canvas.js";
+    var listOfSimData = [];
+
     async function loadPost() {
       const params = new URLSearchParams(window.location.search);
+      const diceBearStyles = {
+        Network_Design: "notionists",
+        Network_Security: "fun-emoji",
+        Network_Management_And_Monitoring: "adventurer",
+        Network_Technology_And_Trends: "bottts",
+        Networking_Troubleshooting_And_Optimization: "avataaars"
+      };
       const postId = parseInt(params.get("id"));
       const post = await fetch(`http://localhost:5245/posts/${postId}`)
         .then(res => res.json())
         .catch(() => null);
 
-      console.log(post);
+      const aboutCreator = await fetch(`http://localhost:5245/account/${post.creatorId}`)
+        .then(res => res.json())
+        .catch(() => null);
+
       
       const container = document.getElementById("postContainer");
 
@@ -42,14 +55,79 @@
                 <div class="caption">${item.content}</div>
               </div>
             `;
+          } else if (item.$type === "net") {
+            console.log(item);
+            const parts = item.natSimulation.split("^");
+            listOfSimData.push(parts[0]);
+            html += `
+              <div class="simulation-box">
+                <canvas class="SimulationArea" data-id="${listOfSimData.length-1}"></canvas>
+                <p>Simulation: ${parts[1]}</p>
+              </div>
+            `;
           }
         });
 
+        const nicheKey = aboutCreator.data.niche.split(" ").join("_");
+        const style = diceBearStyles[nicheKey];
+
         html += `<a href="posts.html" class="back-btn">← Back to Posts</a>`;
+        let creatorImgLink = `https://api.dicebear.com/7.x/${style}/svg?seed=${aboutCreator.data.displayName}&backgroundColor=transparent`;
+        html += `<div class="creatorDetails">
+          <div class="creatorDiv">
+            <h2>About the Creator</h2>
+            <h3>${aboutCreator.data.displayName}</h3>
+            <h4>${aboutCreator.data.niche}</h4>
+            <p>${aboutCreator.data.bio}</p>
+          </div>
+          <img class="creatorAvatar" src="${creatorImgLink}" alt="Creator Avatar" />
+        </div>`;
         container.innerHTML = html;
+        document.title = `${post.caption} - Zurus06.NAT Posts`;
+        drawSimulations();
+        document.querySelector(".creatorDiv").addEventListener("click", () => {
+          window.location.href = `/browser/creator.html?id=${aboutCreator.data.id}`;
+        });
       } else {
         container.innerHTML = "<h2>Post not found</h2>";
       }
+    }
+
+    function drawSimulations() {
+      const canvases = document.getElementsByClassName("SimulationArea");
+
+      Array.from(canvases).forEach((canvas) => {
+        const index = canvas.getAttribute("data-id");
+        const rawSim = listOfSimData[index];
+
+        if (!rawSim) return;
+
+        // Parse JSON safely
+        let simData;
+        try {
+          simData = JSON.parse(rawSim);
+        } catch (error) {
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "red";
+          ctx.font = "20px sans-serif";
+          ctx.fillText("Simulation Parsing Error", 20, 50);
+          return;
+        }
+
+        // Extract data for canvas.js
+        const objects = simData.devices || [];
+        const edges = (simData.links || []).map(link => ({
+          from: link.from,
+          to: link.to
+        }));
+
+        // Resize for visibility
+        canvas.width = 900;
+        canvas.height = 600;
+
+        const ctx = canvas.getContext("2d");
+        redrawScaled(ctx, canvas, objects, edges);
+      });
     }
 
     loadPost();

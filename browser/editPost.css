@@ -2,7 +2,7 @@
   --bg-dark: #0e0e11;
   --card-bg: #1a1a20;
   --text-color: #f4f4f4;
-  --accent: #0af;
+  --accent: rgb(0, 0, 0);
   --border: #2b2b33;
 }
 
@@ -13,6 +13,39 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.6;
+}
+
+.swapUp, .swapDown {
+  background: transparent;
+  border: solid white 1px;
+  color: white;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+nav ul {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  margin-left: 15px;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+.SimulationArea {
+  background: black;
+  max-width: 100%;
+  max-height: 70%;
+  margin-bottom: 20px;
 }
 
 #contentData 
@@ -34,7 +67,9 @@ body {
 }
 
 #postContent {
-  height: fit-content;
+  height: 100px;
+  resize: vertical;
+  padding: 15px;
 }
 
 header {
@@ -47,7 +82,7 @@ header {
 }
 
 header h1 {
-  color: var(--accent);
+  color: var(--text-color);
   font-size: 1.4rem;
 }
 
@@ -58,7 +93,7 @@ header h1 {
 }
 
 .edit-header h2 {
-  color: var(--accent);
+  color: var(--text-color);
   margin-bottom: 1rem;
 }
 
@@ -113,8 +148,8 @@ a {
   border-radius: 8px;
 }
 
-.content-card button {
-  background: crimson;
+.delete-btn {
+  background: rgb(94, 3, 22);
   color: white;
   border: none;
   padding: 0.5rem 0.8rem;
@@ -126,8 +161,8 @@ a {
 .add-card-btn,
 .save-btn {
   display: inline-block;
-  background: var(--accent);
-  color: white;
+  background: white;
+  color: black;
   border: none;
   padding: 0.8rem 1.2rem;
   border-radius: 6px;
@@ -137,13 +172,16 @@ a {
   margin-top: 1rem;
 }
 
+
 #logout {
   cursor: pointer;
 }
 
 .add-card-btn:hover,
-.save-btn:hover {
-  background: #007acc;
+.save-btn:hover, 
+.fab-btn:hover {
+  background: #000000;
+  color: var(--text-color);
 }
 
 footer {
@@ -153,13 +191,12 @@ footer {
   color: #888;
 }
 
-/* Floating button */
 .fab-btn {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  background-color: var(--accent);
-  color: white;
+  background: white;
+  color: black;
   border: none;
   padding: 1rem 1rem;
   font-size: 1.2rem;
@@ -169,11 +206,6 @@ footer {
   transition: 0.3s ease;
 }
 
-.fab-btn:hover {
-  background-color: #007acc;
-}
-
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -240,4 +272,9 @@ footer {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+    color: white;
 }

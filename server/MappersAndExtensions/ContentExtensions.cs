@@ -13,6 +13,10 @@ namespace server.MappersAndExtensions
     {
         public static NewContentDto EncryptContentDto(this NewContentDto contentDto)
         {
+            if (contentDto.type == ContentTypes.NATSimulation.ToString())
+            {
+                return contentDto;
+            }
             contentDto.Content = Cipher.HillCipherEncrypt(contentDto.Content);
             return contentDto;
         }
@@ -42,11 +46,10 @@ namespace server.MappersAndExtensions
                 case ContentTypes.NATSimulation:
                     if (nS == null)
                         throw new ArgumentNullException(nameof(nS), "Simulation service cannot be null for NATSimulation content.");
-
                     return new NetContent
                     {
                         Id = contentDto.Id,
-                        NATSimulation = null // Simulation fetching logic can be implemented here if needed
+                        NATSimulation = await nS.GetSimulationDataFromEmbed(contentDto.simUUID)
                     };
 
                 default:

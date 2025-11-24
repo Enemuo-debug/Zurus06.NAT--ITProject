@@ -1,6 +1,3 @@
-// canvas.js
-// Uses your original drawing helpers with a small addition: findDevice(devices, type, id)
-
 export function drawLine(ctx, x1, y1, x2, y2, color = "green", width = 2) {
   ctx.beginPath();
   ctx.moveTo(x1, y1);
@@ -84,6 +81,66 @@ export function redraw(ctx, canvas, objects, edgeList) {
     const labelY = Math.min(obj.Y + obj.Height + 12, canvas.height - 5);
     ctx.fillText(`${obj.Type} ${obj.Id}`, obj.X, labelY);
   });
+}
+
+export function redrawScaled(ctx, canvas, objects, edgeList) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!objects || objects.length === 0) return;
+
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+
+  objects.forEach(o => {
+    minX = Math.min(minX, o.X);
+    minY = Math.min(minY, o.Y);
+    maxX = Math.max(maxX, o.X + o.Width);
+    maxY = Math.max(maxY, o.Y + o.Height);
+  });
+
+  const contentW = maxX - minX;
+  const contentH = maxY - minY;
+
+  if (contentW <= 0 || contentH <= 0) return;
+
+  const padding = 40;
+  const scaleX = (canvas.width - padding) / contentW;
+  const scaleY = (canvas.height - padding) / contentH;
+  const scale = Math.min(scaleX, scaleY);
+
+  const offsetX = (canvas.width - contentW * scale) / 2;
+  const offsetY = (canvas.height - contentH * scale) / 2;
+
+  ctx.save();
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(scale, scale);
+  ctx.translate(-minX, -minY);
+
+  edgeList.forEach(edge => {
+    const from = findDevice(objects, edge.from.Type, edge.from.Id);
+    const to = findDevice(objects, edge.to.Type, edge.to.Id);
+    if (!from || !to) return;
+
+    drawLine(
+      ctx,
+      from.X + from.Width / 2,
+      from.Y + from.Height / 2,
+      to.X + to.Width / 2,
+      to.Y + to.Height / 2,
+      "#88c",
+      3
+    );
+  });
+
+  objects.forEach(obj => {
+    drawDeviceIcon(ctx, obj);
+
+    ctx.fillStyle = "white";
+    ctx.font = "12px monospace";
+    const labelY = obj.Y + obj.Height + 12;
+    ctx.fillText(`${obj.Type} ${obj.Id}`, obj.X, labelY);
+  });
+
+  ctx.restore();
 }
 
 export function getObjectAt(objects, x, y) {

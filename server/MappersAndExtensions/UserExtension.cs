@@ -13,6 +13,7 @@ namespace server.MappersAndExtensions
         {
             return new OutputUserDto
             {
+                Id = user.Id,
                 DisplayName = user.DisplayName,
                 niche = user.niche.ToString().Replace("_", " "),
                 Bio = user.Bio,

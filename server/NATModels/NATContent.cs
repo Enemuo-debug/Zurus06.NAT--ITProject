@@ -10,7 +10,7 @@ namespace server.NATModels
     {
         public int Id { get; set; }
         public required ContentTypes type { get; set; } = ContentTypes.Text;
-        public string ImgLink { get; set; } = "#";
+        public string ImgLink { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string simUUID { get; set; } = string.Empty;
         public int Link { get; set; }

@@ -7,26 +7,27 @@ namespace server.tools
 {
     public class Heap
     {
-        private List<Tuple<int, int>> priorityQueue;
+        private List<Tuple<string, int>> priorityQueue;
         public Heap()
         {
             priorityQueue = [];
         }
-        public void Add(Tuple<int, int> x)
+        public void Add(Tuple<string, int> x)
         {
             priorityQueue.Add(x);
             FixHeapFromBottom(priorityQueue.Count - 1);
         }
-        public Tuple<int, int>? Peek()
+
+        // No longer needed function sha
+        public Tuple<string, int>? Peek()
         {
-            // Get the minimum element without removing it
             if (priorityQueue.Count == 0) return null;
             return priorityQueue[0];
         }
-        public Tuple<int, int>? Pop()
+        public Tuple<string, int>? Pop()
         {
             if (priorityQueue.Count == 0) return null;
-            Tuple<int, int> output = priorityQueue[0];
+            Tuple<string, int> output = priorityQueue[0];
             priorityQueue[0] = priorityQueue[priorityQueue.Count - 1];
             priorityQueue.RemoveAt(priorityQueue.Count - 1);
             FixHeapFromTop();
@@ -47,7 +48,7 @@ namespace server.tools
         }
         public void Swap(int a, int b)
         {
-            Tuple<int, int> temp = priorityQueue[a];
+            Tuple<string, int> temp = priorityQueue[a];
             priorityQueue[a] = priorityQueue[b];
             priorityQueue[b] = temp;
         }

@@ -1,0 +1,128 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: "Poppins", sans-serif;
+    margin-top: 150px;
+}
+
+header {
+    display: flex;
+    z-index: 10;
+    flex-direction: row;
+    box-sizing: border-box;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    position: fixed;
+    top: 0px;
+    width: 100%;
+    background-color: black;
+    padding: 10px;
+    border-bottom: 1px solid #ffffff;
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
+}
+
+header nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 600;
+}
+
+.postCard a {
+    display: inline-block;
+    border: solid 1px #ffffff;
+    padding: 10px;
+    border-radius: 10px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.postCard {
+    border: solid 1px #ffffff;
+    padding: 10px;
+    margin: 20px;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+
+
+footer {
+    text-align: center;
+    padding: 15px;
+    border-top: 1px solid #ffffff;
+    margin-top: 30px;
+    font-size: 14px;
+    color: #777777;
+}
+
+.container {
+    max-width: 95%;
+    max-height: 20%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 0 auto;
+    background: none;
+    border: 1px solid white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    justify-content: center;
+}
+
+.bioData {
+    flex: 0 0 45%;
+    margin-top: 0px;
+    align-items: flex-start;
+    padding-right: 20px;
+    border: none;
+}
+
+.postsSection {
+    flex: 1 1 50%; 
+    height: 100%;
+    align-items: flex-start;
+    padding-left: 30px; 
+    text-align: left;
+}
+
+.postsSection h1 {
+    padding-left: 20px;
+}
+
+img#creatorAvatar {
+    position: relative;
+    border: none;
+    display: inline-block;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.postsContainer {
+    height: 50em;
+    overflow-y: scroll;
+}
+
+.userData {
+    position: relative;
+    width: 100%;
+    margin-left: 20px;
+}
+
+.postsContainer h1 {
+    color: #888b8d;
+}
+
+::-webkit-scrollbar {
+    width: 0px;
+}

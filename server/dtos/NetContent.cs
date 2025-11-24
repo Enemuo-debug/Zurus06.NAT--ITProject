@@ -10,6 +10,6 @@ namespace server.dtos
     public class NetContent : OutputContentGroup
     {
         public required int Id { get; set; }
-        public required NATSimulation NATSimulation { get; set; }
+        public required string NATSimulation { get; set; }
     }
 }

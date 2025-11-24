@@ -8,6 +8,7 @@ namespace server.dtos
 {
     public class OutputUserDto
     {
+        public required string Id { get; set; }
         public required string DisplayName { get; set; }
         public required string niche { get; set; }
         public required string Bio { get; set; }

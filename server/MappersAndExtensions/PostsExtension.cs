@@ -13,7 +13,7 @@ namespace server.MappersAndExtensions
 {
     public static class PostsExtension
     {
-        public async static Task<OutputPostDto> PostDetails(this NATPosts post, IContent contentRepo)
+        public async static Task<OutputPostDto> PostDetails(this NATPosts post, IContent contentRepo, ISimulation simRepo)
         {
             List<OutputContentGroup> allContents = new List<OutputContentGroup>();
             int currentContentId = post.Content;
@@ -22,7 +22,8 @@ namespace server.MappersAndExtensions
             {
                 var content = await contentRepo.GetContentById(currentContentId);
                 if (content == null) break;
-                allContents.Add(await content.DecryptContentDto(null!));
+                var temp = await content.DecryptContentDto(simRepo);
+                allContents.Add(temp);
                 currentContentId = content.Link;
             }
             return new OutputPostDto

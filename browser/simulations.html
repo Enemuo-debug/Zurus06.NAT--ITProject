@@ -251,7 +251,12 @@
         renderCards();
       }
       else {
-        const embedCode = `http://localhost:5245/diagrams/embed/${selectedSimId}`;
+        const embedCodeJson = await fetch(`http://localhost:5245/diagrams/embed-code/${selectedSimId}`, {
+          method: "GET",
+          credentials: "include"
+        });
+        const embedData = await embedCodeJson.json();
+        const embedCode = embedData.data;
         navigator.clipboard.writeText(embedCode)
           .then(() => {
             alert("Embed code copied to clipboard!");

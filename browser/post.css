@@ -85,6 +85,48 @@ nav a {
     animation: identifier 0.3s forwards;
 }
 
+.creatorDiv {
+    background-color: transparent;
+    color: #ffffff;
+    max-width: 45%;
+    border: 1px solid #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.creatorDetails :hover {
+    cursor: pointer;
+    animation: identifier 0.3s forwards;
+}
+
+.creatorDetails {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.creatorAvatar {
+    width: 45%;
+    height: 45%;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+}
+
+.SimulationArea {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border: white 1px solid;
+    border-radius: 12px;
+    margin: none;
+}
+.simulation-box {
+    color: #ffffff;
+    text-align: center;
+}
+
 @keyframes identifier {
     0% {
         transform: scale(1);

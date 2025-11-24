@@ -59,7 +59,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // drop onto canvas
   canvas.addEventListener("dragover", e => e.preventDefault());
   canvas.addEventListener("drop", e => {
     if (linkMode) return;
@@ -72,7 +71,6 @@ window.addEventListener("DOMContentLoaded", () => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // compute next id for that type
     if (!deviceList[type]) deviceList[type] = [0];
     const ids = deviceList[type];
     const nextId = (ids.length ? ids[ids.length - 1] : 0) + 1;
@@ -93,7 +91,6 @@ window.addEventListener("DOMContentLoaded", () => {
     redraw(ctx, canvas, devices, edges);
   });
 
-  // mouse interactions: move, delete, link
   canvas.addEventListener("mousedown", e => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -101,14 +98,12 @@ window.addEventListener("DOMContentLoaded", () => {
     const y = e.clientY - rect.top;
     const obj = getObjectAt(devices, x, y);
 
-    // not in link mode -> move or delete on right click
     if (!linkMode) {
       if (e.button === 0 && obj) {
         dragging = obj;
         offsetX = x - obj.X;
         offsetY = y - obj.Y;
       } else if (e.button === 2 && obj) {
-        // delete device and all edges referencing it
         devices = devices.filter(d => !(d.Type === obj.Type && d.Id === obj.Id));
 
         edges = edges.filter(edge =>
@@ -122,7 +117,6 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // link mode
     if (linkMode) {
       if (!obj) return;
 
@@ -132,17 +126,14 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // clicked target
       const target = obj;
 
-      // same device => cancel
       if (linkStart.Type === target.Type && linkStart.Id === target.Id) {
         addLog("Cannot link device to itself", "error");
         linkStart = null;
         return;
       }
 
-      // check existing (bidirectional check)
       const exists = edges.some(e =>
         (e.from.Type === linkStart.Type && e.from.Id === linkStart.Id && e.to.Type === target.Type && e.to.Id === target.Id) ||
         (e.to.Type === linkStart.Type && e.to.Id === linkStart.Id && e.from.Type === target.Type && e.from.Id === target.Id)
@@ -197,6 +188,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadSimulation() {
+    alert("Use a laptop for creating simulations for better experience");
     if (!simulationId) {
       addLog("No simulation ID provided in URL", "info");
       return;
@@ -213,7 +205,8 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const body = await res.json();
-      const sim = body && body.data;
+      console.log(body);
+      const sim = body.data;
       if (!sim) {
         addLog("Simulation not found", "error");
         return;
@@ -225,6 +218,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const parsed = JSON.parse(sim.dataJson);
+      document.getElementById("simulationName").textContent = sim.name + ` - Zurus06.NAT`;
       devices = parsed.devices || [];
       edges = parsed.links || [];
 
@@ -251,7 +245,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   loadSimulation();
 
-  // ========== SAVE SIMULATION ==========
   saveBtn.addEventListener("click", async () => {
     if (!simulationId) return addLog("Missing simulation ID", "error");
 

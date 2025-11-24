@@ -13,11 +13,13 @@ namespace server.Repositories
     {
         private readonly ApplicationDbContext context;
         private readonly IContent contentRepo;
+        private readonly ISimulation simRepo;
 
-        public PostsRepo(ApplicationDbContext _context, IContent _contentRepo)
+        public PostsRepo(ApplicationDbContext _context, IContent _contentRepo, ISimulation _simRepo)
         {
             context = _context;
             contentRepo = _contentRepo;
+            simRepo = _simRepo;
         }
 
         public async Task<List<NATPosts>> GetAllPosts()
@@ -53,7 +55,7 @@ namespace server.Repositories
             List<OutputPostDto> allPosts = new List<OutputPostDto>();
             foreach (var post in posts)
             {
-                allPosts.Add(await post.PostDetails(contentRepo));
+                allPosts.Add(await post.PostDetails(contentRepo, simRepo));
             }
             return allPosts;
         }

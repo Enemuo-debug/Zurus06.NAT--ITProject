@@ -47,41 +47,14 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.WriteIndented = true;
-        options.JsonSerializerOptions.TypeInfoResolverChain.Insert(0, 
-            new DefaultJsonTypeInfoResolver
-            {
-                Modifiers =
-                {
-                    typeInfo =>
-                    {
-                        if (typeInfo.Type == typeof(OutputContentGroup))
-                        {
-                            typeInfo.PolymorphismOptions = new JsonPolymorphismOptions
-                            {
-                                TypeDiscriminatorPropertyName = "$type",
-                                IgnoreUnrecognizedTypeDiscriminators = true,
-                                UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToBaseType
-                            };
-
-                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
-                                new JsonDerivedType(typeof(TextContent), "text"));
-                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
-                                new JsonDerivedType(typeof(ImageContent), "image"));
-                            typeInfo.PolymorphismOptions.DerivedTypes.Add(
-                                new JsonDerivedType(typeof(NetContent), "net"));
-                        }
-                    }
-                }
-            });
-    });
-
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.DefaultIgnoreCondition =
+        JsonIgnoreCondition.WhenWritingNull;
+});
 
 builder.Services.AddControllers();
-builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<EmailCodeVerification>();
 builder.Services.AddScoped<JWTToken>();

@@ -15,15 +15,17 @@ namespace server.controllers
     {
         private readonly IPosts postsRepo;
         private readonly IContent contentRepo;
+        private readonly ISimulation simRepo;
         private readonly FileUpload cloudinaryService;
         private readonly UserManager<NATUser> userManager;
 
-        public PostsController(IPosts _postsRepo, IContent _contentRepo, FileUpload _cloudinaryService, UserManager<NATUser> _userManager)
+        public PostsController(IPosts _postsRepo, IContent _contentRepo, FileUpload _cloudinaryService, UserManager<NATUser> _userManager, ISimulation _simRepo)
         {
             postsRepo = _postsRepo;
             contentRepo = _contentRepo;
             cloudinaryService = _cloudinaryService;
             userManager = _userManager;
+            simRepo = _simRepo;
         }
 
         [HttpGet("all")]
@@ -33,7 +35,7 @@ namespace server.controllers
             var detailedPosts = new List<OutputPostDto>();
             foreach (var post in posts)
             {
-                detailedPosts.Add(await post.PostDetails(contentRepo));
+                detailedPosts.Add(await post.PostDetails(contentRepo, simRepo));
             }
             return Ok(detailedPosts);
         }
@@ -46,7 +48,7 @@ namespace server.controllers
             var email = User.GetUserEmail() ?? "";
             var post = await postsRepo.CreateANewPost(newPost.EncryptPostDto(), email);
             if (post == null) return BadRequest("Could not create post");
-            return Ok(await post.PostDetails(contentRepo));
+            return Ok(await post.PostDetails(contentRepo, simRepo));
         }
 
         [Authorize]
@@ -70,7 +72,7 @@ namespace server.controllers
             }
             var cipherContent = await contentRepo.CreateNewContent(newContent, user.Id, url);
             if (cipherContent == null) return BadRequest("Could not create content");
-            var plainContent = await cipherContent.DecryptContentDto(null!);
+            var plainContent = await cipherContent.DecryptContentDto(simRepo);
             return Ok(plainContent);
         }
         [HttpGet("{id:int}")]
@@ -78,14 +80,13 @@ namespace server.controllers
         {
             var post = await postsRepo.GetPostById(id);
             if (post == null) return NotFound("Post not found");
-            return Ok(await post.PostDetails(contentRepo));
+            return Ok(await post.PostDetails(contentRepo, simRepo));
         }
 
-        [Authorize]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetPostsByUserId([FromRoute] string userId)
         {
-            var user = await postsRepo.GetLoggedInUser(User);
+            var user = await userManager.FindByIdAsync(userId);
             if (user == null) return BadRequest("This user no longer exists...");
             var posts = await postsRepo.GetAllUsersPosts(userId);
             return Ok(posts);

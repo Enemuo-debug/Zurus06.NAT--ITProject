@@ -9,71 +9,93 @@ namespace server.tools
 {
     public class Graph
     {
-        private Dictionary<int, List<Tuple<int, int>>> adjacencyList;
-        private HashSet<int> visited;
+        private Dictionary<string, List<Tuple<string, int>>> adjacencyList;
+        private HashSet<string> visited;
         public Graph()
         {
             adjacencyList = [];
             visited = [];
         }
 
-        public void AddNode(int vertex)
+        public bool AddNode(string vertex)
         {
-            if (vertex <= 0)
+            if (string.IsNullOrEmpty(vertex))
             {
-                Console.WriteLine("Only positive integers allowed");
+                Console.WriteLine("Invalid Vertex");
+                return false;
             }
             else if (!adjacencyList.ContainsKey(vertex))
             {
                 adjacencyList[vertex] = [];
-            }
-        }
-        public void AddLink(int start, int end, int cost)
-        {
-            if (cost < 0) return;
-            if (!adjacencyList.ContainsKey(start) || !adjacencyList.ContainsKey(end))
-            {
-                Console.WriteLine("Referenced nodes are not available");
+                return true;
             }
             else
             {
-                var value = adjacencyList[start].Find((Tuple<int, int> val) => val.Item1 == end);
+                Console.WriteLine("Vertex already exists");
+                return false;
+            }
+        }
+
+        public bool AddNodes (List<string> vertices)
+        {
+            foreach (var item in vertices)
+            {
+                bool success = AddNode(item);
+                if (!success)
+                {
+                    Console.WriteLine("These nodes either contain duplicates or contain empty strings");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool AddLink(string start, string end, int cost)
+        {
+            if (cost < 0) return false;
+            if (!adjacencyList.ContainsKey(start) || !adjacencyList.ContainsKey(end))
+            {
+                Console.WriteLine("Referenced nodes are not available");
+                return false;
+            }
+            else
+            {
+                var value = adjacencyList[start].Find((Tuple<string, int> val) => val.Item1 == end);
                 if (value != null)
                 {
                     Console.WriteLine("This link already exists");
                     Console.WriteLine("So I'll just update the cost");
-                    Tuple<int, int> tuple = new Tuple<int, int>(value.Item1, cost);
+                    Tuple<string, int> tuple = new(value.Item1, cost);
                     adjacencyList[start].Remove(value);
                     adjacencyList[start].Add(tuple);
-                    return;
+                    return true;
                 }
-                adjacencyList[start].Add(new Tuple<int, int>(end, cost));
+                adjacencyList[start].Add(new Tuple<string, int>(end, cost));
+                return true;
             }
         }
-        private void DFS(int startNode, int end)
+        private void DFS(string startNode, string end)
         {
             if (!adjacencyList.ContainsKey(startNode)) return;
             if (visited.Contains(startNode)) return;
-            Console.WriteLine(startNode);
             visited.Add(startNode);
             if (startNode == end) return;
-            foreach (Tuple<int, int> val in adjacencyList[startNode])
+            foreach (Tuple<string, int> val in adjacencyList[startNode])
             {
                 DFS(val.Item1, end);
             }
         }
-        public void DFSHelper(int startNode, int endNode = -1)
+        public void DFSHelper(string startNode, string endNode)
         {
             visited.Clear();
             DFS(startNode, endNode);
         }
-        public void BFS(int start, int end = -1)
+        public void BFS(string start, string end)
         {
             if (!adjacencyList.ContainsKey(start) || !adjacencyList.ContainsKey(end)) return;
 
-            Queue<int> processQueue = new Queue<int>();
+            Queue<string> processQueue = new Queue<string>();
 
-            // Clear visited hash set
             visited.Clear();
 
             processQueue.Enqueue(start);
@@ -81,10 +103,10 @@ namespace server.tools
 
             while (processQueue.Count > 0)
             {
-                int current = processQueue.Dequeue();
+                string current = processQueue.Dequeue();
                 Console.WriteLine(current);
 
-                foreach (Tuple<int, int> neighbor in adjacencyList[current])
+                foreach (Tuple<string, int> neighbor in adjacencyList[current])
                 {
                     if (!visited.Contains(neighbor.Item1))
                     {
@@ -100,26 +122,27 @@ namespace server.tools
         }
 
         // Single point shortest path algorithm
-        public string DijkstraAlgorithm(int start, List<string> mappings)
+        public string DijkstraAlgorithm(string start, out List<string> paths)
         {
+            paths = new();
             string output = "";
+
             if (!adjacencyList.ContainsKey(start))
-            {
-                return "This starting point is not a part of this graph";
-            }
-            
-            var dist = new Dictionary<int, int>();
-            var prev = new Dictionary<int, int>();
+                return "This starting point is not in the graph.";
+
+            var dist = new Dictionary<string, int>();
+            var prev = new Dictionary<string, string>();
+
             foreach (var key in adjacencyList.Keys)
             {
                 dist[key] = int.MaxValue;
-                prev[key] = -1;
+                prev[key] = null;
             }
 
             dist[start] = 0;
 
-            // min-heap of (node, currentDistance)
-            Heap pq = new Heap();
+            // priority queue
+            Heap pq = new();
             pq.Add(Tuple.Create(start, 0));
 
             while (!pq.IsEmpty())
@@ -127,52 +150,59 @@ namespace server.tools
                 var currentNode = pq.Pop();
                 if (currentNode == null) break;
 
-                int currentValue = currentNode.Item1;
-                int currentCost = currentNode.Item2;
+                string u = currentNode.Item1;
+                int currentDist = currentNode.Item2;
 
-                if (currentCost > dist[currentValue]) continue;
+                if (currentDist > dist[u]) 
+                    continue;
 
-                // Check all the children of the current node
-                foreach (var edge in adjacencyList[currentValue])
+                foreach (var edge in adjacencyList[u])
                 {
-                    int vertex = edge.Item1;
+                    string v = edge.Item1;
                     int weight = edge.Item2;
-                    // Check if you have a better/cheaper link than the existing one to your neighbours
-                    long ndLong = currentCost + weight;
-                    if (ndLong < dist[vertex])
+
+                    long newDist = currentDist + weight;
+
+                    if (newDist < dist[v])
                     {
-                        // If so, we update the distance array
-                        dist[vertex] = (int)ndLong;
-                        // And the previous array
-                        prev[vertex] = currentValue;
-                        pq.Add(Tuple.Create(vertex, dist[vertex]));
+                        dist[v] = (int)newDist;
+                        prev[v] = u;
+                        pq.Add(Tuple.Create(v, dist[v]));
                     }
                 }
             }
 
-            // Output distances (or use prev[] to reconstruct paths)
-            Console.WriteLine($"Shortest distances from node {start}:");
-            foreach (var kvp in dist)
+            // Prepare output
+            output+=$"Shortest paths from node {start}:";
+
+            foreach (var node in adjacencyList.Keys)
             {
-                string nodeName = mappings[kvp.Key];
-                string distance = kvp.Value == int.MaxValue ? "∞" : kvp.Value.ToString();
-                string path = "";
-                int currentNode = kvp.Key;
-                // Reconstruct path from start to currentNode
-                var pathNodes = new List<string>();
-                if (kvp.Value != int.MaxValue)
+                if (dist[node] == int.MaxValue)
                 {
-                    while (currentNode != -1)
-                    {
-                        pathNodes.Add(mappings[currentNode]);
-                        currentNode = prev[currentNode];
-                    }
-                    pathNodes.Reverse();
-                    path = string.Join(" -> ", pathNodes);
+                    output+=$"{node} : unreachable";
+                    paths.Add($"{node}: unreachable");
+                    continue;
                 }
-                output += $"{nodeName}: {distance}, Path: {path}\n";
+
+                // Reconstruct path
+                List<string> pathList = new();
+                string curr = node;
+
+                while (curr != null)
+                {
+                    pathList.Add(curr);
+                    curr = prev[curr];
+                }
+
+                pathList.Reverse();
+
+                string pathString = string.Join("->", pathList);
+                string distance = dist[node].ToString();
+
+                output+=$"{node}: distance={distance}, path={pathString}";
+                paths.Add(pathString);
             }
-            
+
             return output;
         }
     }

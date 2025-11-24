@@ -20,16 +20,47 @@ namespace server.Repositories
         public async Task<NATContent?> CreateNewContent(NewContentDto newContentDto, string userId, string url = "")
         {
             newContentDto = newContentDto.EncryptContentDto();
-            var newContent = new NATContent
+            if (newContentDto.type == ContentTypes.Text.ToString())
             {
-                type = Enum.Parse<ContentTypes>(newContentDto.type),
-                ImgLink = url,
-                Content = newContentDto.Content,
-                Owner = userId
-            };
-            await context.Contents.AddAsync(newContent);
-            await context.SaveChangesAsync();
-            return newContent;
+                var newContent = new NATContent
+                {
+                    type = Enum.Parse<ContentTypes>(newContentDto.type),
+                    Content = newContentDto.Content,
+                    Owner = userId
+                };
+                await context.Contents.AddAsync(newContent);
+                await context.SaveChangesAsync();
+                return newContent;
+            }
+            else if (newContentDto.type == ContentTypes.Image.ToString())
+            {
+                var newContent = new NATContent
+                {
+                    type = Enum.Parse<ContentTypes>(newContentDto.type),
+                    Content = newContentDto.Content,
+                    ImgLink = url,
+                    Owner = userId
+                };
+                await context.Contents.AddAsync(newContent);
+                await context.SaveChangesAsync();
+                return newContent;
+            }
+            else if (newContentDto.type == ContentTypes.NATSimulation.ToString())
+            {
+                var newContent = new NATContent
+                {
+                    type = Enum.Parse<ContentTypes>(newContentDto.type),
+                    simUUID = newContentDto.simUUID,
+                    Owner = userId
+                };
+                await context.Contents.AddAsync(newContent);
+                await context.SaveChangesAsync();
+                return newContent;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<NATContent?> GetContentById(int contentId)

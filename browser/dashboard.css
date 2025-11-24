@@ -2,8 +2,8 @@
     --bg: #0f0f12;
     --card-bg: #18181c;
     --text: #f3f3f3;
-    --accent: #00bcd4;
-    --accent-light: #00e5ff;
+    --accent: #ffffff;
+    --accent-light: #ffffff;
     --border: #2a2a2f;
 }
 
@@ -192,7 +192,7 @@ aside {
 
 .create-post-card input,
 .create-post-card textarea {
-    width: 100%;
+    width: 97%;
     padding: 0.8rem;
     margin-top: 0.6rem;
     border: 1px solid var(--border);
@@ -268,8 +268,8 @@ button:hover {
 }
 
 .delete-btn:hover {
-    background-color: crimson;
-    border-color: crimson;
+    background-color: rgb(94, 3, 22);
+    border-color: rgb(94, 3, 22);
     color: white;
 }
 
