@@ -117,6 +117,13 @@ aside {
     color: var(--accent-light);
 }
 
+small {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    color: gray;
+}
+
 .search-container {
     display: flex;
     align-items: center;

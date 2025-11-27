@@ -12,6 +12,10 @@
   --black: #000;
 }
 
+#prim, #sssp {
+  display: none;
+}
+
 body {
   margin: 0;
   font-family: monospace;

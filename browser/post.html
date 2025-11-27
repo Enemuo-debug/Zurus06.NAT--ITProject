@@ -16,20 +16,28 @@
     </nav>
   </header>
   <div class="container" id="postContainer"></div>
+  <div class="commentSection container">
+    <div id="commentCreate">
+      <input id="commentInput" type="text" placeholder="write something...">
+      <button id="postCommentBtn">Post Comment</button>
+    </div>
+    <div id="comments"></div>
+  </div>
 
   <script type="module">
     import { redrawScaled } from "./canvas.js";
     var listOfSimData = [];
+    const diceBearStyles = {
+      Network_Design: "notionists",
+      Network_Security: "fun-emoji",
+      Network_Management_And_Monitoring: "adventurer",
+      Network_Technology_And_Trends: "bottts",
+      Networking_Troubleshooting_And_Optimization: "avataaars"
+    };
 
     async function loadPost() {
       const params = new URLSearchParams(window.location.search);
-      const diceBearStyles = {
-        Network_Design: "notionists",
-        Network_Security: "fun-emoji",
-        Network_Management_And_Monitoring: "adventurer",
-        Network_Technology_And_Trends: "bottts",
-        Networking_Troubleshooting_And_Optimization: "avataaars"
-      };
+      
       const postId = parseInt(params.get("id"));
       const post = await fetch(`http://localhost:5245/posts/${postId}`)
         .then(res => res.json())
@@ -56,15 +64,24 @@
               </div>
             `;
           } else if (item.$type === "net") {
-            console.log(item);
-            const parts = item.natSimulation.split("^");
-            listOfSimData.push(parts[0]);
-            html += `
-              <div class="simulation-box">
-                <canvas class="SimulationArea" data-id="${listOfSimData.length-1}"></canvas>
-                <p>Simulation: ${parts[1]}</p>
-              </div>
-            `;
+            if (item.natSimulation == "") {
+              html += `
+                <div class="simulation-box">
+                  <canvas class="SimulationArea"></canvas>
+                  <p>Simulation has been deleted by owner</p>
+                </div>
+              `;
+            }
+            else {
+              const parts = item.natSimulation.split("^");
+              listOfSimData.push(parts[0]);
+              html += `
+                <div class="simulation-box">
+                  <canvas class="SimulationArea" data-id="${listOfSimData.length-1}"></canvas>
+                  <p>Simulation: ${parts[1]}</p>
+                </div>
+              `;
+            }
           }
         });
 
@@ -88,6 +105,8 @@
         document.querySelector(".creatorDiv").addEventListener("click", () => {
           window.location.href = `/browser/creator.html?id=${aboutCreator.data.id}`;
         });
+        // Load comments for this post
+        loadComments(postId);
       } else {
         container.innerHTML = "<h2>Post not found</h2>";
       }
@@ -131,6 +150,77 @@
     }
 
     loadPost();
+
+    document.getElementById('postCommentBtn').addEventListener('click', async () => {
+      const input = document.getElementById('commentInput');
+      const message = input.value.trim();
+      if (!message) return alert('Please enter a comment');
+      const params = new URLSearchParams(window.location.search);
+      const postId = parseInt(params.get('id'));
+      try {
+        const res = await fetch(`http://localhost:5245/posts/comment/${postId}`, {
+          method: 'POST',
+          body: JSON.stringify(message),
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || 'Failed to post comment');
+        alert('Comment posted successfully');
+        input.value = '';
+        loadComments(postId);
+      } catch (error) {
+        alert('Login to be able to comment');
+        window.location = "signin.html";
+      }
+    });
+
+    async function loadComments(id) {
+      try {
+        const res = await fetch(`http://localhost:5245/posts/${id}/comments`, { 
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (!res.ok) {
+          console.error('Failed to load comments');
+          return;
+        }
+
+        let comments = await res.json();
+        comments = comments.reverse();
+        const commentsDiv = document.getElementById('comments');
+        commentsDiv.innerHTML = '';
+
+        if (comments.length === 0) {
+          commentsDiv.innerHTML = '<p style="color: white">Be the first to comment...</p>';
+          return;
+        }
+
+        comments.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'comment';
+
+          const style = diceBearStyles[c.niche];
+          let commenterImgLink = 
+            `https://api.dicebear.com/7.x/${style}/svg?seed=${c.displayName}&backgroundColor=transparent`;
+
+          div.innerHTML = `
+            <img class="comment-img" src="${commenterImgLink}" alt="Avatar">
+
+            <div class="comment-body">
+              <p class="comment-text">${c.message}</p>
+              <span class="comment-author">— ${c.displayName}</span>
+            </div>
+          `;
+
+          commentsDiv.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error('Error loading comments:', error);
+      }
+    }
   </script>
 </body>
 </html>

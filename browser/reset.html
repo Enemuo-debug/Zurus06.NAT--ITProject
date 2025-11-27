@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Password Reset</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="signin.css" />
+</head>
+<body>
+<header>
+    <h1>Welcome to Zurus06.NAT</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="posts.html">Posts</a>
+    </nav>
+</header>
+
+<div class="sub-body">
+  <div class="container">
+
+    <form id="resetForm" class="form active">
+      <div class="title">Enter a new password</div>
+
+      <input 
+        type="password" 
+        id="newPass" 
+        placeholder="New password" 
+        minlength="6" 
+        required
+      />
+
+      <button type="submit" class="submit">Reset Password</button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get("code");
+
+  if (!code) {
+    alert("Invalid password reset link.");
+  }
+
+  document.getElementById("resetForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const password = document.getElementById("newPass").value.trim();
+
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+
+    console.log(password);
+
+    try {
+      const res = await fetch(`http://localhost:5245/account/reset/${code}`, {
+        method: "PUT",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(password)
+      });
+
+      console.log(res)
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Reset failed.");
+        return;
+      }
+
+      alert(data.message || "Password reset successful!");
+      window.location.href = "signin.html";
+
+    } catch (error) {
+      console.error(error);
+      alert("Network error. Try again.");
+    }
+  });
+</script>
+
+</body>
+</html>

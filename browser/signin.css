@@ -115,7 +115,7 @@ nav a:hover {
   color: var(--text);
 }
 
-input {
+input, textarea {
   width: 100%;
   padding: 12px;
   margin-bottom: 1rem;
@@ -129,6 +129,10 @@ input {
 }
 
 input:focus {
+  border-color: var(--accent);
+}
+
+textarea:focus {
   border-color: var(--accent);
 }
 

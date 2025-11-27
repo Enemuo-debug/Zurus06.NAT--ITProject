@@ -1,5 +1,9 @@
 import { redraw, getObjectAt, findDevice } from "./canvas.js";
 
+// modes = 0 -> Normal
+// 1 -> Link
+// 2 -> Shortest Path Algorithm
+
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.querySelector(".SimulationArea");
   const ctx = canvas.getContext("2d");
@@ -11,13 +15,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const clearLogBtn = document.getElementById("clearlog");
   const logOutput = document.getElementById("logOutput");
   const descriptionBox = document.querySelector(".Description p");
+  const sssp = document.getElementById("sssp");
 
   const deviceList = { Router: [0], Server: [0], Switch: [0], PC: [0] };
   let devices = [];   
   let edges = [];
   let dragging = null;
   let offsetX = 0, offsetY = 0;
-  let linkMode = false;
+  let mode = 0;
   let linkStart = null;
 
   const simulationId = new URLSearchParams(window.location.search).get("id");
@@ -43,6 +48,31 @@ window.addEventListener("DOMContentLoaded", () => {
     canvas.height = rect.height;
     redraw(ctx, canvas, devices, edges);
   }
+
+  function activeBtn(index)
+  {
+    console.log(mode);
+    switch (index) {
+      case 0:
+        joinBtn.classList.remove("active");
+        sssp.classList.remove("active");
+        break;
+        
+      case 1:
+        joinBtn.classList.add("active");
+        sssp.classList.remove("active");
+        break;
+
+      case 2:
+        joinBtn.classList.remove("active");
+        sssp.classList.add("active");
+        break;
+
+      default:
+        break;
+    }
+  }
+
   fixCanvasResolution();
   window.addEventListener("resize", fixCanvasResolution);
 
@@ -54,14 +84,14 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     node.addEventListener("dragstart", e => {
-      if (linkMode) return;
+      if (mode == 1) return;
       e.dataTransfer.setData("device", node.dataset.device);
     });
   });
 
   canvas.addEventListener("dragover", e => e.preventDefault());
   canvas.addEventListener("drop", e => {
-    if (linkMode) return;
+    if (mode == 1) return;
     e.preventDefault();
 
     const type = e.dataTransfer.getData("device");
@@ -91,14 +121,14 @@ window.addEventListener("DOMContentLoaded", () => {
     redraw(ctx, canvas, devices, edges);
   });
 
-  canvas.addEventListener("mousedown", e => {
+  canvas.addEventListener("mousedown", async (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const obj = getObjectAt(devices, x, y);
 
-    if (!linkMode) {
+    if (mode == 0) {
       if (e.button === 0 && obj) {
         dragging = obj;
         offsetX = x - obj.X;
@@ -117,7 +147,7 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (linkMode) {
+    if (mode == 1) {
       if (!obj) return;
 
       if (!linkStart) {
@@ -152,6 +182,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
       linkStart = null;
     }
+
+    if (mode == 2) {
+      if(obj == null) return;
+      let objUUID = `${obj.Type}_${obj.Id}`;
+      const res = await fetch(`http://localhost:5245/diagrams/sssp/${simulationId}/${objUUID}`);
+      const data = await res.json();
+      addLog(data.data[0])
+      console.log(data);
+    }
   });
 
   canvas.addEventListener("mousemove", e => {
@@ -171,11 +210,15 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   joinBtn.addEventListener("click", () => {
-    linkMode = !linkMode;
-    joinBtn.classList.toggle("active");
+    mode = mode == 1? 0:1;
+    activeBtn(mode);
     linkStart = null;
-    addLog(linkMode ? "Link mode ON" : "Link mode OFF");
   });
+
+  sssp.addEventListener("click", ()=>{
+    mode = mode == 2? 0:2;
+    activeBtn(mode);
+  })
 
   function rebuildDeviceListFromDevices() {
     for (const k of Object.keys(deviceList)) {
@@ -241,6 +284,8 @@ window.addEventListener("DOMContentLoaded", () => {
       addLog("Simulation loaded successfully", "success");
     } catch (err) {
       addLog("Could not load simulation: " + (err.message || err), "error");
+      alert("Your session just ended, Login to continue");
+      window.location = "signin.html";
     }
   }
   loadSimulation();
@@ -274,7 +319,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ========== DELETE SIMULATION ==========
   if (deleteBtn) {
     deleteBtn.addEventListener("click", async () => {
       if (!simulationId) return addLog("Missing simulation ID", "error");

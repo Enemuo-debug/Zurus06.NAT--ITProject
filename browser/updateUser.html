@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zurus06.NAT | Update Profile</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- Shared Style -->
+  <link rel="stylesheet" href="signin.css" />
+
+  <!-- Page-specific overrides -->
+  <style>
+    .container {
+      margin-top: 40px;
+      max-width: 450px;
+      padding: 30px;
+      background: #000000;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .form input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ffffff;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .form button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      background-color: transparent;
+      color: #fff;
+      border: white 1px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .form button:hover {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    textarea {
+        scrollbar-width: none;
+        resize: none;
+    }
+
+    label {
+        display: block;
+        text-align: left;
+        padding: 5px;
+    }
+
+    .sub {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .form select {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        background: #111;
+        color: #fff;
+        border: 1px solid #444;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    /* Error styling */
+    .error {
+      border-color: #ff4444 !important;
+    }
+
+    .error-message {
+      color: #ff4444;
+      font-size: 13px;
+      margin-top: -8px;
+      margin-bottom: 8px;
+      display: block;
+      text-align: left;
+      padding-left: 5px;
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: #4e2828;
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 8px;
+    }
+
+    .char-count.warning {
+      color: grey;
+    }
+
+    .char-count.error {
+      color: #ff4444;
+    }
+
+  </style>
+
+</head>
+<body>
+
+<header>
+    <h1>Zurus06.NAT</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="posts.html">Posts</a>
+    </nav>
+</header>
+
+<div class="sub-body">
+  <div class="container">
+
+    <form id="updateForm" class="form active" novalidate>
+
+      <div class="title">Update Your Details</div>
+      
+      <label for="displayName">Display Name</label>
+      <input type="text" id="displayName" placeholder="Display Name (min 5 characters)" required />
+      <span id="displayNameError" class="error-message"></span>
+
+      <label for="username">User Name</label>
+      <input type="text" id="username" placeholder="User Name (no spaces)" required />
+      <span id="usernameError" class="error-message"></span>
+
+      <label for="niche">Niche</label>
+      <select id="niche" required>
+        <option value="">Select Niche</option>
+        <option value="1">Network Design</option>
+        <option value="2">Network Security</option>
+        <option value="3">Network Management & Monitoring</option>
+        <option value="4">Network Technology & Trends</option>
+        <option value="5">Networking Troubleshooting & Optimization</option>
+      </select>
+      <span id="nicheError" class="error-message"></span>
+
+      <label for="bio">BIO</label>
+      <textarea id="bio" rows="6" placeholder="Bio (30-300 characters)" required></textarea>
+      <div id="bioCount" class="char-count">0 / 300</div>
+      <span id="bioError" class="error-message"></span>
+
+      <button type="submit">Save Changes</button>
+
+      <p class="sub">Make sure your details are correct before submitting.</p>
+    </form>
+
+  </div>
+</div>
+
+<script>
+  let array = ["Network Design", 
+    "Network Security", 
+    "Network Management And Monitoring", 
+    "Network Technology And Trends", 
+    "Network Troubleshooting And Optimization"];
+
+  function validateDisplayName() {
+    const displayName = document.getElementById("displayName");
+    const error = document.getElementById("displayNameError");
+    const value = displayName.value.trim();
+
+    if (!value) {
+      displayName.classList.add("error");
+      error.textContent = "Display Name is required.";
+      return false;
+    }
+
+    if (value.length < 5) {
+      displayName.classList.add("error");
+      error.textContent = "Please choose a longer Display Name (min 5 characters).";
+      return false;
+    }
+
+    displayName.classList.remove("error");
+    error.textContent = "";
+    return true;
+  }
+
+  function validateUsername() {
+    const username = document.getElementById("username");
+    const error = document.getElementById("usernameError");
+    const value = username.value.trim();
+
+    if (!value) {
+      username.classList.add("error");
+      error.textContent = "User Name is required.";
+      return false;
+    }
+
+    if (/\s/.test(value)) {
+      username.classList.add("error");
+      error.textContent = "User Name cannot contain spaces.";
+      return false;
+    }
+
+    username.classList.remove("error");
+    error.textContent = "";
+    return true;
+  }
+
+  function validateNiche() {
+    const niche = document.getElementById("niche");
+    const error = document.getElementById("nicheError");
+    const value = parseInt(niche.value);
+
+    if (!value || value < 1 || value > 5) {
+      niche.classList.add("error");
+      error.textContent = "Please select a valid niche.";
+      return false;
+    }
+
+    niche.classList.remove("error");
+    error.textContent = "";
+    return true;
+  }
+
+  function validateBio() {
+    const bio = document.getElementById("bio");
+    const error = document.getElementById("bioError");
+    const counter = document.getElementById("bioCount");
+    const value = bio.value.trim();
+    const length = value.length;
+
+    counter.textContent = `${length} / 300`;
+    
+    if (length > 300) {
+      counter.classList.add("error");
+      counter.classList.remove("warning");
+    } else if (length > 280) {
+      counter.classList.add("warning");
+      counter.classList.remove("error");
+    } else {
+      counter.classList.remove("error", "warning");
+    }
+
+    if (!value) {
+      bio.classList.add("error");
+      error.textContent = "Bio is required.";
+      return false;
+    }
+
+    if (length < 30) {
+      bio.classList.add("error");
+      error.textContent = "Your bio should be at least 30 characters long.";
+      return false;
+    }
+
+    if (length > 300) {
+      bio.classList.add("error");
+      error.textContent = "Your bio should not exceed 300 characters in length.";
+      return false;
+    }
+
+    bio.classList.remove("error");
+    error.textContent = "";
+    return true;
+  }
+
+  // Real-time validation
+  document.getElementById("displayName").addEventListener("blur", validateDisplayName);
+  document.getElementById("displayName").addEventListener("input", validateDisplayName);
+  
+  document.getElementById("username").addEventListener("blur", validateUsername);
+  document.getElementById("username").addEventListener("input", validateUsername);
+  
+  document.getElementById("niche").addEventListener("change", validateNiche);
+  
+  document.getElementById("bio").addEventListener("input", validateBio);
+  document.getElementById("bio").addEventListener("blur", validateBio);
+
+  async function loadUser() {
+    try {
+      const res = await fetch("http://localhost:5245/account/me", {
+        credentials: "include"
+      });
+
+      if (!res.ok) return;
+
+      const user = await res.json();
+      const data = user.data.userDetails;
+      document.getElementById("displayName").value = data.displayName || "";
+      document.getElementById("niche").value = array.indexOf(data.niche) + 1;
+      document.getElementById("bio").value = data.bio || "";
+      document.getElementById("username").value = data.userName || "";
+      
+      // Update bio counter after loading
+      validateBio();
+    } 
+    catch (err) {
+      console.error("Failed to load user:", err);
+      alert("Your session has ended, Sign in again...");
+      window.location = "signin.html";
+    }
+  }
+
+  loadUser();
+
+  // Submit updated profile
+  document.getElementById("updateForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    // Validate all fields
+    const isDisplayNameValid = validateDisplayName();
+    const isUsernameValid = validateUsername();
+    const isNicheValid = validateNiche();
+    const isBioValid = validateBio();
+
+    if (!isDisplayNameValid || !isUsernameValid || !isNicheValid || !isBioValid) {
+      alert("Please fix the errors before submitting.");
+      return;
+    }
+
+    const body = {
+      UserName: document.getElementById("username").value.trim(),
+      Bio: document.getElementById("bio").value.trim(),
+      Niche: parseInt(document.getElementById("niche").value),
+      DisplayName: document.getElementById("displayName").value.trim()
+    };
+
+    try {
+      const res = await fetch("http://localhost:5245/account/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Update failed.");
+        return;
+      }
+
+      alert("Profile updated successfully!");
+      window.location = "dashboard.html";
+    } catch (err) {
+      alert("Could not update profile.");
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+</html>

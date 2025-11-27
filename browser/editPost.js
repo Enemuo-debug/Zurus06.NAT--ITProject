@@ -6,6 +6,9 @@ const introInput = document.getElementById("postContent");
 const cardsContainer = document.getElementById("cardsContainer");
 const saveBtn = document.getElementById("savePostBtn");
 
+const title = document.getElementById("title");
+const intro = document.getElementById("intro");
+
 let mergedContents = [];
 
 if (!postId) {
@@ -28,14 +31,25 @@ async function fetchPost() {
 
     titleInput.value = post.caption || "";
     introInput.value = post.intro || "";
+    title.innerText = `${titleInput.value.length}/150`;
+    intro.innerText = `${introInput.value.length}/700`;
 
     mergedContents = (post.contents || []);
 
     renderContentCards();
   } catch (err) {
-    alert("Error loading post: " + err.message);
+    alert("Error loading post: " + err.message + "\nSign in");
+    window.location = "signin.html";
   }
 }
+
+titleInput.addEventListener("input", ()=>{
+  title.innerText = `${titleInput.value.length}/150`;
+});
+
+introInput.addEventListener("input", ()=>{
+  intro.innerText = `${introInput.value.length}/700`;
+});
 
 document.getElementById("logout").addEventListener("click", async () => {
   try {
@@ -88,8 +102,8 @@ saveBtn.addEventListener("click", async () => {
         });
 
         if (!res.ok) {
-          const errtxt = await res.text();
-          throw new Error(`Failed to save new content: ${errtxt}`);
+          alert("You aren't logged in anymore, login and try again");
+          window.location = "signin.html"
         }
 
         const saved = await res.json();
@@ -120,7 +134,8 @@ saveBtn.addEventListener("click", async () => {
     alert("✅ Post updated successfully!");
     window.location.href = "dashboard.html";
   } catch (err) {
-    alert("Error saving post: " + err.message);
+      alert("You aren't logged in anymore, login and try again");
+      window.location = "signin.html"
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Save Changes";
@@ -148,14 +163,21 @@ document.getElementById("addContentBtn").addEventListener("click", async () => {
   let newContent = null;
 
   if (type === "text") {
-    const textData = document.getElementById("contentData").value.trim();
+    let textData = document.getElementById("contentData").value.trim();
     if (!textData) return alert("Please enter text content.");
+    if (textData.length < 10){
+      document.getElementById("contentData").value = "";
+      return alert("Text Content should be up to 10 charachters long");
+    }
     newContent = { isNew: true, $type: "text", content: textData };
   } 
   else if (type === "image") {
+    const maxsize = 10*1024*1024;
     const fileInput = document.getElementById("imgUpload");
     const caption = document.getElementById("imgCaption").value.trim() || "...";
     if (!fileInput.files[0]) return alert("Please select an image.");
+    console.log(`${fileInput.files[0].size}/${maxsize}`);
+    if (fileInput.files[0].size > maxsize) return alert("Image size is more than 10mb");
 
     const imgURL = URL.createObjectURL(fileInput.files[0]);
     newContent = { isNew: true, $type: "image", imgLink: imgURL, content: caption, file: fileInput.files[0] };
@@ -232,18 +254,32 @@ function renderContentCards() {
     } 
     else if (type === "net") {
       const uuid = escapeHtml(content.natSimulation || "");
-      const parts = uuid.split("^");
-      const simName = parts[parts.length - 1];
+      if (content.natSimulation == "")
+      {
+        card.innerHTML = `
+          <p><b>Simulation has been deleted by you</b></p>
+          <canvas class="SimulationArea"></canvas>
+          <div>
+            <button data-index="${index}" class="delete-btn">Delete</button>
+            <button class="swapUp">MOVE UP ⤊</button>
+            <button class="swapDown">MOVE DOWN ⤋</button>
+          </div>
+        `;
+      }
+      else {
+        const parts = uuid.split("^");
+        const simName = parts[parts.length - 1];
 
-      card.innerHTML = `
-        <p><b>Simulation Name: ${simName}</b></p>
-        <canvas class="SimulationArea"></canvas>
-        <div>
-          <button data-index="${index}" class="delete-btn">Delete</button>
-          <button class="swapUp">MOVE UP ⤊</button>
-          <button class="swapDown">MOVE DOWN ⤋</button>
-        </div>
-      `;
+        card.innerHTML = `
+          <p><b>Simulation Name: ${simName}</b></p>
+          <canvas class="SimulationArea"></canvas>
+          <div>
+            <button data-index="${index}" class="delete-btn">Delete</button>
+            <button class="swapUp">MOVE UP ⤊</button>
+            <button class="swapDown">MOVE DOWN ⤋</button>
+          </div>
+        `;
+      }
     }
 
     else {

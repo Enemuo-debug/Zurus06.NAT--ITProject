@@ -99,15 +99,21 @@ header h1 {
 
 .edit-form input,
 .edit-form textarea {
-  width: 100%;
+  width: 97%;
   height: 20px;
   background: var(--card-bg);
   border: 1px solid var(--border);
   color: var(--text-color);
   padding: 0.8rem;
-  margin-bottom: 1rem;
   border-radius: 8px;
   font-size: 1rem;
+}
+
+small {
+  display: block;
+  text-align: end;
+  padding: 5px;
+  color: grey;
 }
 
 .edit-form input:focus,

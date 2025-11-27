@@ -39,6 +39,7 @@
       <input type="password" id="signinPassword" placeholder="Password" required />
       <button type="submit" id="signInButton">Login</button>
       <small><a href="#" id="goToVerify">Sign Up?</a></small>
+      <small><a id="forgot">Forgot password?</a></small>
     </form>
   </div>
   </div>
@@ -50,6 +51,21 @@
     const signinForm = document.getElementById('signinForm');
     const goToSignin = document.getElementById('goToSignin');
     const goToVerify = document.getElementById('goToVerify');
+
+    document.getElementById("forgot").onclick = async () => {
+      let value = prompt("Enter your email address:");
+      if(value.trim === "") return
+      const response = await fetch('http://localhost:5245/account/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ EmailAddress: value.trim() })
+      });
+
+      if (!response.ok) return alert("An error occurred...")
+
+      const data = response.json();
+      console.log(data)
+    }
 
     // Toggle between forms
     verifyTab.onclick = () => {
@@ -95,7 +111,7 @@
         try {
           data = await response.json();
         } catch {
-          throw new Error("Invalid JSON returned from server");
+          throw new Error("Server Error");
         }
 
         if (!response.ok) {

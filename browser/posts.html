@@ -34,10 +34,10 @@
       try {
       const response = await fetch('http://localhost:5245/posts/all');
       const data = await response.json();
-      posts = Shuffle(data);
+      posts = Shuffle(data.data);
       renderPosts();
       } catch (error) {
-      console.error('Error fetching posts:', error);
+        console.error('Error fetching posts:', error);
       }
     }
 

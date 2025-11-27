@@ -35,6 +35,7 @@
       <div class="sidebar-links">
         <a href="/browser/simulations.html">Network Simulations</a>
         <a href="/browser/posts.html">Explore Posts</a>
+        <a href="/browser/updateUser.html">Settings</a>
         <a href="https://github.com/Enemuo-debug/Zurus06.NAT--ITProject/blob/main/readme.md">Help</a>
       </div>
     </aside>
@@ -45,8 +46,10 @@
       <div class="create-post-card">
         <h3>+ Create New Post</h3>
         <form id="createPostForm">
-          <input type="text" id="postTitle" placeholder="Enter Post Title" required />
-          <textarea id="postIntro" placeholder="Write a short intro..." rows="3" required></textarea>
+          <input type="text" id="postTitle" placeholder="Enter Post Title" maxlength="150" minlength="10" required/>
+          <small id="title">0/150</small>
+          <textarea id="postIntro" placeholder="Write a short intro..." rows="5" maxlength="700" required></textarea>
+          <small id="intro">0/700</small><br>
           <button type="submit" id="createpost">Create Post</button>
         </form>
       </div>
@@ -65,6 +68,18 @@
   <script>
     const postsContainer = document.getElementById("posts-container");
     const avatarImg = document.getElementById("userAvatar");
+    const TITLE = document.getElementById("postTitle");
+    const INTRO = document.getElementById("postIntro");
+    const title = document.getElementById("title");
+    const intro = document.getElementById("intro");
+
+    TITLE.addEventListener("input", ()=>{
+      title.innerText = `${TITLE.value.length}/150`;
+    });
+
+    INTRO.addEventListener("input", ()=>{
+      intro.innerText = `${INTRO.value.length}/700`;
+    });
 
     const diceBearStyles = {
       Network_Design: "notionists",
@@ -104,6 +119,9 @@
         renderPosts(userData.data.userPosts.reverse() || []);
       } catch (error) {
         postsContainer.innerHTML = `<p style="color:red;">Error loading dashboard: ${error.message}</p>`;
+        alert("You are not logged in. Please sign in again.");
+        window.location.href = "/browser/signin.html";
+        return;
       }
     }
 

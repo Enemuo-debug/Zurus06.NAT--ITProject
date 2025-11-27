@@ -25,8 +25,10 @@
     </section>
 
     <section class="edit-form">
-      <input type="text" id="postTitle" placeholder="Enter post title..." />
-      <textarea id="postContent" rows="4" placeholder="Write your short intro..."></textarea>
+      <input type="text" id="postTitle" placeholder="Enter post title..." maxlength="150" minlength="10" required/>
+      <small id="title">0/150</small>
+      <textarea id="postContent" placeholder="Write your short intro..." rows="5" maxlength="700" required></textarea>
+      <small id="intro">0/700</small><br>
     </section>
 
     <section id="ContentCards">
@@ -54,11 +56,11 @@
           </select>
 
           <div id="textInputGroup">
-            <textarea id="contentData" placeholder="Enter text content..."></textarea>
+            <textarea minlength="10" id="contentData" placeholder="Enter text content..." required></textarea>
           </div>
 
           <div id="imageInputGroup" style="display:none;">
-            <input type="file" id="imgUpload" />
+            <input type="file" id="imgUpload" accept="image/*"/>
             <input type="text" id="imgCaption" placeholder="Enter image caption..." />
           </div>
 

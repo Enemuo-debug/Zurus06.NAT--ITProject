@@ -91,7 +91,7 @@
       transition: 0.3s;
     }
 
-    .btn-create:hover {
+    button:hover {
       transform: translateY(-2px);
       background-color: rgba(255, 255, 255, 0.05);
     }
@@ -101,6 +101,36 @@
       flex-wrap: wrap;
       gap: 20px;
       justify-content: center;
+    }
+
+    .renameSection
+    {
+      background-color: #000000dc;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .renameSection >* {
+      margin: 10px;
+    }
+
+    .renameSection button {
+      padding: 12px 24px;
+      background-color: transparent;
+      color: #fff;
+      border: 2px solid white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
     }
 
     .card {
@@ -145,11 +175,16 @@
     #contextMenu li:hover {
       background: #222;
     }
+
+    #close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- ✅ HEADER SECTION -->
   <header>
     <h1>Your Zurus06.NAT Simulations</h1>
     <nav>
@@ -159,7 +194,6 @@
     </nav>
   </header>
 
-  <!-- ✅ MAIN CONTENT -->
   <main>
     <h2>Simulation Dashboard</h2>
 
@@ -170,25 +204,66 @@
 
     <div class="cards-container" id="cardsContainer"></div>
 
+    <div class="renameSection">
+      <h1>Rename Simulation?</h1>
+      <input type="text" id="newSimName" placeholder="Enter a new name for simulation..." />
+      <button id="rename">Rename Simulation</button>
+      <button id="close">Close</button>
+    </div>
+
     <div id="contextMenu">
       <ul>
         <li onclick="goTo('edit')" class="options">Edit Simulation</li>
         <li onclick="goTo('delete')" class="options">Delete Simulation</li>
         <li onclick="goTo('copy')" class="options">Copy Embed Code</li>
+        <li onclick="goTo('rename')" class="options">Rename Simulation</li>
       </ul>
     </div>
   </main>
 
   <script>
     const cardsContainer = document.getElementById("cardsContainer");
+    const closeBtn = document.getElementById("close");
     const createBtn = document.getElementById("createBtn");
     const contextMenu = document.getElementById("contextMenu");
     const simInput = document.getElementById("simInput");
+    const renameSection = document.querySelector(".renameSection");
+    const renameBtn = document.querySelector("#rename");
     let selectedSimId;
+    let selectedSimCard;
     let simulations = [];
+
 
     async function renderCards() {
       cardsContainer.innerHTML = "";
+      closeBtn.addEventListener("click", async ()=>{
+        renameSection.style.display = "none";
+      })
+
+      renameBtn.addEventListener("click", async ()=>{
+        const newName = document.getElementById("newSimName").value.trim();
+        if (newName.length < 10 || newName.length > 50){
+          document.getElementById("newSimName").value = "";
+          return alert("Simulation Name should be around 10-50 charachters");
+        }
+        if (!newName) return alert("Please enter a new name for the simulation.");
+
+        const res = await fetch(`http://localhost:5245/diagrams/rename/${selectedSimId}`, {
+          method: "PUT",
+          body: JSON.stringify(newName),
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        });
+
+        const data = await res.json();
+        alert(data.message);
+        
+        if (res.ok) {
+          renameSection.style.display = "none";
+          document.getElementById("newSimName").value = "";
+          renderCards();
+        }
+      })
 
       try {
         const res = await fetch("http://localhost:5245/diagrams/all", {
@@ -209,6 +284,7 @@
         simulations.forEach(sim => {
           const card = document.createElement("div");
           card.className = "card";
+          card.dataset.name = sim.name;
           card.id = sim.id;
           card.innerHTML = `
             <h3>Simulation Name: ${sim.name}</h3>
@@ -218,6 +294,7 @@
           card.addEventListener("contextmenu", (event) => {
             event.preventDefault();
             selectedSimId = sim.id;
+            selectedSimCard = card;
             contextMenu.style.top = `${event.pageY + 10}px`;
             contextMenu.style.left = `${event.pageX + 10}px`;
             contextMenu.style.display = "block";
@@ -225,7 +302,8 @@
           cardsContainer.appendChild(card);
         });
       } catch (error) {
-        console.error("Error loading simulations:", error);
+        alert("Your session just ended, Login to continue");
+        window.location = "signin.html";
       }
     }
 
@@ -250,7 +328,7 @@
         })
         renderCards();
       }
-      else {
+      else if (action == "copy") {
         const embedCodeJson = await fetch(`http://localhost:5245/diagrams/embed-code/${selectedSimId}`, {
           method: "GET",
           credentials: "include"
@@ -265,10 +343,18 @@
             alert("Failed to copy embed code: " + err);
           });
       }
+      else {
+        renameSection.style.display = "flex";
+        renameSection.children[1].value= selectedSimCard.dataset.name;
+      }
     }
 
     createBtn.addEventListener("click", async () => {
       const name = simInput.value.trim();
+      if (name.length < 10 || name.length > 50){
+        document.getElementById("simInput").value = "";
+        return alert("Simulation name should be around 10-50 charachters");
+      }
       if (!name) return alert("Please enter a simulation name.");
 
       console.log("Sending:", { diagramName: name }); // Debugging
