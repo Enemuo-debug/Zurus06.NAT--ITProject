@@ -18,5 +18,7 @@ namespace server.Interfaces
         Task<bool> UpdatePost(UpdatePostDto updatedPost, int postId, string email);
         Task<NATUser?> GetLoggedInUser(ClaimsPrincipal claimsPrincipal);
         Task<bool> DeletePost(int postId, string userId);
+        Task<NATComments?> CreateComment(int postId, string message, string userId);
+        Task<List<NATComments>> GetCommentsForPost(int postId);
     }
 }

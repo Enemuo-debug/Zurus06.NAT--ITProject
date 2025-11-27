@@ -6,6 +6,7 @@ using server.NATModels;
 using server.tools;
 using server.MappersAndExtensions;
 using server.Interfaces;
+using Org.BouncyCastle.Crypto.Generators;
 
 namespace server.controllers
 {
@@ -164,6 +165,88 @@ namespace server.controllers
                 Response.Cookies.Append("NAT-Authentication", "", cookieOptions);
             }
             return Ok("You have been logged out successfully");
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> StupidUser([FromBody] VerifyEmailDto verifyEmailDto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            // Create email Subject
+            string Subject = "🔐 Forgot Password?";
+            string? code = await ecv.CreateCode(verifyEmailDto.EmailAddress, 10, true);
+            if (string.IsNullOrEmpty(code))
+            {
+                return BadRequest(new HTTPResponseStructure(false, "This email address doesn't exist..."));
+            }
+            string Body = ecv.GenerateBody(code, true);
+            await emailService.SendEmailAsync(verifyEmailDto.EmailAddress, Subject, Body);
+            HTTPResponseStructure response = new(true, "Password reset link sent");
+            return Ok(response);
+        }
+
+        [HttpPut("reset/{code}")]
+        public async Task<IActionResult> ChangePassword([FromRoute] string code, [FromBody] string password)
+        {
+            Console.WriteLine("hello world");
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+            {
+                return BadRequest(new { success = false, message = "Password must be at least 6 characters." });
+            }
+
+            var request = await ecv.ForgotCode(code);
+            if (request == null)
+            {
+                return BadRequest(new { success = false, message = "Invalid or expired reset code." });
+            }
+
+            var user = await userManager.FindByEmailAsync(request.EmailAddress);
+            if (user == null)
+            {
+                return NotFound(new { success = false, message = "User does not exist." });
+            }
+
+            var removeResult = await userManager.RemovePasswordAsync(user);
+
+            if (!removeResult.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Failed to remove old password.",
+                    errors = removeResult.Errors
+                });
+            }
+
+            var addResult = await userManager.AddPasswordAsync(user, password);
+
+            if (!addResult.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Failed to set new password.",
+                    errors = addResult.Errors
+                });
+            }
+
+            return Ok(new { success = true, message = "Password reset successfully." });
+        }
+
+        [Authorize]
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUserDetails ([FromBody] UpdateUserDto updateUserDto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var loggedInUser = await postsRepo.GetLoggedInUser(User);
+
+            if (loggedInUser == null) return BadRequest("The logged in user has been deleted from DB...");
+            loggedInUser.DisplayName = updateUserDto.DisplayName;
+            loggedInUser.niche = (Niche) updateUserDto.Niche;
+            loggedInUser.UserName = updateUserDto.UserName;
+            loggedInUser.Bio = updateUserDto.Bio;
+
+            var result = await userManager.UpdateAsync(loggedInUser);
+            return result.Succeeded ? Ok(new HTTPResponseStructure(true, "Update Successful")) : BadRequest("An error occured during update");
         }
     }
 }

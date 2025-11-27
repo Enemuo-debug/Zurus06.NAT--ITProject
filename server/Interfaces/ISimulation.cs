@@ -18,5 +18,6 @@ namespace server.Interfaces
         Task<string> GetSimulationDataFromEmbed(string embedURL);
         Task<List<string>> SingleSourceShortestPathAlgorithm (Graph simGraph, string startId);
         Task<Graph> ConvertSimulationToGraphForAnalysis (int simulationId);
+        Task<bool> RenameSim (string newName, int simId);
     }
 }

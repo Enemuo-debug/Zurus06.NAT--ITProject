@@ -15,6 +15,7 @@ namespace server.MappersAndExtensions
             {
                 Id = user.Id,
                 DisplayName = user.DisplayName,
+                UserName = user.UserName,
                 niche = user.niche.ToString().Replace("_", " "),
                 Bio = user.Bio,
                 JoinedAt = user.CreatedOn

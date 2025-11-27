@@ -20,32 +20,60 @@ namespace server.tools
             'n','o','p','q','r','s','t','u','v','w','x','y','z',
         };
 
-        public async Task<string?> CreateCode(string emailAddress, int length = 5)
+        public async Task<string?> CreateCode(string emailAddress, int length = 5, bool forgotPassword = false)
         {
-            bool canRequest = await ctx.Users.AnyAsync(u => u.Email == emailAddress);
+            bool cannotRequest = await ctx.Users.AnyAsync(u => u.Email == emailAddress);
             string code = string.Empty;
             Random random = new Random();
-            if (!canRequest)
+            if (forgotPassword)
             {
-                var existingRequest = await ctx.Requests.FirstOrDefaultAsync(u => u.EmailAddress == emailAddress);
-                for (int i = 0; i < length; i++)
+                if (cannotRequest)
                 {
-                    code += AllowedEmailLocalChars[random.Next(AllowedEmailLocalChars.Count)];
-                }
-                if (existingRequest != null)
-                {
-                    existingRequest.Code = code;
-                    existingRequest.CreatedOn = DateTime.Now;
-                }
-                else
-                {
-                    await ctx.Requests.AddAsync(new NATRequests
+                    var existingRequest = await ctx.Requests.FirstOrDefaultAsync(u => u.EmailAddress == emailAddress);
+                    for (int i = 0; i < length; i++)
                     {
-                        EmailAddress = emailAddress,
-                        Code = code
-                    });
+                        code += AllowedEmailLocalChars[random.Next(AllowedEmailLocalChars.Count)];
+                    }
+                    if (existingRequest != null)
+                    {
+                        existingRequest.Code = code;
+                        existingRequest.CreatedOn = DateTime.Now;
+                    }
+                    else
+                    {
+                        await ctx.Requests.AddAsync(new NATRequests
+                        {
+                            EmailAddress = emailAddress,
+                            Code = code
+                        });
+                    }
+                    await ctx.SaveChangesAsync();
                 }
-                await ctx.SaveChangesAsync();
+            }
+            else
+            {
+                if (!cannotRequest)
+                {
+                    var existingRequest = await ctx.Requests.FirstOrDefaultAsync(u => u.EmailAddress == emailAddress);
+                    for (int i = 0; i < length; i++)
+                    {
+                        code += AllowedEmailLocalChars[random.Next(AllowedEmailLocalChars.Count)];
+                    }
+                    if (existingRequest != null)
+                    {
+                        existingRequest.Code = code;
+                        existingRequest.CreatedOn = DateTime.Now;
+                    }
+                    else
+                    {
+                        await ctx.Requests.AddAsync(new NATRequests
+                        {
+                            EmailAddress = emailAddress,
+                            Code = code
+                        });
+                    }
+                    await ctx.SaveChangesAsync();
+                }
             }
             return code;
         }
@@ -58,17 +86,78 @@ namespace server.tools
             {
                 output = DateTime.Now < request.CreatedOn.AddMinutes(30);
                 ctx.Requests.Remove(request);
-                Console.WriteLine($"{code}, {request.Code}");
-            }
-            else
-            {
-                Console.WriteLine($"{code}, request not found.");
             }
             return output;
         }
-        public string GenerateBody(string code)
+
+        public async Task<NATRequests?> ForgotCode(string code)
         {
-            string output = $@"
+            var request = await ctx.Requests.FirstOrDefaultAsync(r => r.Code == code);
+
+            if (request == null)  return null;
+
+            bool valid = DateTime.Now < request.CreatedOn.AddMinutes(60);
+
+            ctx.Requests.Remove(request);
+            await ctx.SaveChangesAsync();
+
+            return valid ? request : null;
+        }
+
+        public string GenerateBody(string code, bool forgot = false)
+        {
+            string url = Environment.GetEnvironmentVariable("URL") ?? "http://127.0.0.1:5500/";
+            string output = forgot ? 
+            $@"
+            <!DOCTYPE html>
+            <html lang='en'>
+            <head>
+                <meta charset='UTF-8'>
+                <title>Zurus06.NAT Password Reset</title>
+            </head>
+            <body style='
+                margin:0;
+                padding:0;
+                font-family:Arial, Helvetica, sans-serif;
+                background-color:#ffffff;
+                color:#000000;
+            '>
+                <div style='
+                    max-width:600px;
+                    margin:40px auto;
+                    border:1px solid #000000;
+                    padding:30px;
+                    text-align:center;
+                '>
+                    <h2 style='margin-bottom:10px;'>Zurus06.NAT</h2>
+                    <p style='font-size:15px; margin-bottom:25px;'>
+                        You requested a password reset. Click the button below to continue.
+                    </p>
+
+                    <a href='{url}browser/reset?code={code}' 
+                    style='
+                            display:inline-block;
+                            padding:12px 20px;
+                            background-color:transparent;
+                            border: black 1px solid;
+                            color:black;
+                            border-radius:6px;
+                            text-decoration:none;
+                            font-weight:bold;
+                            font-size:16px;
+                    '>
+                    Reset Password
+                    </a>
+
+                    <p style='margin-top:30px; font-size:12px; color:#555;'>
+                        If you did not request this, you can safely ignore this email.
+                    </p>
+                </div>
+            </body>
+            </html>
+            "
+            :
+            $@"
             <!DOCTYPE html>
             <html lang='en'>
             <head>

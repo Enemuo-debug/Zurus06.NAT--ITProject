@@ -10,6 +10,7 @@ namespace server.dtos
     {
         public required string Id { get; set; }
         public required string DisplayName { get; set; }
+        public required string UserName { get; set; }
         public required string niche { get; set; }
         public required string Bio { get; set; }
         public required string JoinedAt { get; set; }

@@ -151,5 +151,39 @@ namespace server.Repositories
 
             return true;
         }
+
+        public async Task<NATComments?> CreateComment(int postId, string message, string userId)
+        {
+            // Validate input
+            if (string.IsNullOrWhiteSpace(message)) return null;
+
+            // Ensure post exists
+            var post = await GetPostById(postId);
+            if (post == null) return null;
+
+            // Ensure user exists
+            var user = await context.Users.FindAsync(userId);
+            if (user == null) return null;
+
+            var comment = new NATComments
+            {
+                PostId = postId,
+                UserId = userId,
+                Message = message.Trim()
+            };
+
+            await context.Comments.AddAsync(comment);
+            await context.SaveChangesAsync();
+
+            return comment;
+        }
+
+        public async Task<List<NATComments>> GetCommentsForPost(int postId)
+        {
+            var comments = await context.Comments
+                .Where(c => c.PostId == postId)
+                .ToListAsync();
+            return comments;
+        }
     }
 }

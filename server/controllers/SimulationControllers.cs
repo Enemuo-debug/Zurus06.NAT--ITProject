@@ -215,7 +215,7 @@ public class SimulationControllers: ControllerBase
         return Ok(response);
     }
 
-    [HttpPost("sssp/{simId}/{startId}")]
+    [HttpGet("sssp/{simId}/{startId}")]
     public async Task<IActionResult> DjikstraAlgorithm ([FromRoute] int simId, [FromRoute] string startId)
     {
         HTTPResponseStructure response;
@@ -228,6 +228,41 @@ public class SimulationControllers: ControllerBase
 
         List<string> SSSP = await simRepo.SingleSourceShortestPathAlgorithm(simGraph!, startId);
         response = new HTTPResponseStructure(true, "Algorithm Complete", SSSP);
+        return Ok(response);
+    }
+
+    [Authorize]
+    [HttpPut("rename/{id}")]
+    public async Task<IActionResult> RenameSimulation ([FromRoute] int id, [FromBody] string name)
+    {
+        var user = await postsRepo.GetLoggedInUser(User);
+        HTTPResponseStructure response;
+        if (user == null)
+        {
+            response = new HTTPResponseStructure(false, "User not found");
+            return Unauthorized(response);
+        }
+
+        var NATSim = await simRepo.GetSimulationById(id);
+        if (NATSim == null) {
+            response = new HTTPResponseStructure(false, "Simulation doesn't exist");
+            return NotFound(response);
+        }
+
+        if (NATSim.OwnerId != user.Id)
+        {
+            response = new HTTPResponseStructure(false, "You cannot modify this simulation");
+            return Unauthorized(response);
+        }
+
+        var result = await simRepo.RenameSim(name, id);
+        if (!result)
+        {
+            response = new HTTPResponseStructure(false, "Could not rename simulation");
+            return BadRequest(response);
+        }
+
+        response = new HTTPResponseStructure(true, "Simulation renamed successfully");
         return Ok(response);
     }
 }

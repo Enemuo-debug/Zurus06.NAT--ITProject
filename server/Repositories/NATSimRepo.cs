@@ -83,11 +83,23 @@ namespace server.Repositories
             return "";
         }
 
+        public async Task<bool> RenameSim (string newName, int simId)
+        {
+            var simulation = await GetSimulationById(simId);
+            if (simulation == null) return false;
+            
+            simulation.Name = newName;
+            context.Diagrams.Update(simulation);
+            int result = await context.SaveChangesAsync();
+            return result > 0;
+        }
+
         public async Task<string> GetSimulationDataFromEmbed(string embedURL)
         {
             var codes = embedURL.Split("/");
             string simulationId = codes[^1];
             var simulation = await GetSimulationById(int.Parse(simulationId));
+            if (simulation == null) return "";
             return simulation!.DataJson + "^" +simulation!.Name;
         }
 

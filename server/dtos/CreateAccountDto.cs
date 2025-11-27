@@ -9,7 +9,6 @@ namespace server.dtos
     public class CreateAccountDto
     {
         [Required]
-        [MinLength(5, ErrorMessage = "Please choose a longer Display Name")]
         public string UserName { get; set; } = string.Empty;
         [Required]
         [EmailAddress]

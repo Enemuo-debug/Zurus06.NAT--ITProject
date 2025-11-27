@@ -19,5 +19,6 @@ namespace server.data
         public DbSet<NATContent> Contents { get; set; } = null!;
         public DbSet<NATSimulation> Diagrams { get; set; } = null!;
         public DbSet<NATRequests> Requests { get; set; } = null!;
+        public DbSet<NATComments> Comments { get; set; } = null!;
     }
 }
