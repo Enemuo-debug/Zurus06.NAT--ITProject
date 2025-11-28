@@ -30,7 +30,6 @@ namespace server.tools
             {
                 File = new FileDescription(file.FileName, stream),
                 Folder = "Zurus06.NAT-IMAGES",
-                Transformation = new Transformation().Width(500).Height(500).Crop("fill").Gravity("face")
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
