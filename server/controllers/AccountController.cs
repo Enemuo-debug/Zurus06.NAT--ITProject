@@ -18,16 +18,14 @@ namespace server.controllers
         private readonly EmailCodeVerification ecv;
         private readonly SignInManager<NATUser> signInManager;
         private readonly UserManager<NATUser> userManager;
-        private readonly IConfiguration config;
         private readonly JWTToken jWtToken;
         private readonly IPosts postsRepo;
-        public AccountController(EmailService _emailService, EmailCodeVerification _ecv, SignInManager<NATUser> _signInManager, UserManager<NATUser> _userManager, IConfiguration _config, JWTToken _token, IPosts _postsRepo)
+        public AccountController(EmailService _emailService, EmailCodeVerification _ecv, SignInManager<NATUser> _signInManager, UserManager<NATUser> _userManager, JWTToken _token, IPosts _postsRepo)
         {
             emailService = _emailService;
             ecv = _ecv;
             signInManager = _signInManager;
             userManager = _userManager;
-            config = _config;
             jWtToken = _token;
             postsRepo = _postsRepo;
         }

@@ -1,24 +1,17 @@
 using System.Net;
 using System.Net.Mail;
-using Microsoft.Extensions.Configuration;
 
 public class EmailService
 {
-    private readonly IConfiguration _config;
-
-    public EmailService(IConfiguration config)
-    {
-        _config = config;
-    }
 
     public async Task SendEmailAsync(string to, string subject, string body)
     {
-        var smtpServer = _config["EmailSettings:SmtpServer"];
-        var port = int.Parse(_config["EmailSettings:Port"] ?? "0");
-        var senderEmail = _config["EmailSettings:SenderEmail"] ?? "null";
-        var senderName = _config["EmailSettings:SenderName"];
-        var username = _config["EmailSettings:Username"];
-        var password = _config["EmailSettings:Password"];
+        var smtpServer = Environment.GetEnvironmentVariable("SmtpServer");
+        var port = int.Parse(Environment.GetEnvironmentVariable("Port")!);
+        var senderEmail = Environment.GetEnvironmentVariable("SenderEmail");
+        var senderName = Environment.GetEnvironmentVariable("SenderName");
+        var username = Environment.GetEnvironmentVariable("Username");
+        var password = Environment.GetEnvironmentVariable("Password");
         var mail = new MailMessage
         {
             From = new MailAddress(senderEmail, senderName),

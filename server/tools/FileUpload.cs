@@ -11,12 +11,12 @@ namespace server.tools
     public class FileUpload
     {
         private readonly Cloudinary _cloudinary;
-        public FileUpload(IConfiguration config)
+        public FileUpload()
         {
             var acc = new Account(
-                config["Cloudinary:CloudName"],
-                config["Cloudinary:ApiKey"],
-                config["Cloudinary:ApiSecret"]
+                Environment.GetEnvironmentVariable("CloudName"),
+                Environment.GetEnvironmentVariable("ApiKey"),
+                Environment.GetEnvironmentVariable("ApiSecret")
             );
             _cloudinary = new Cloudinary(acc);
         }

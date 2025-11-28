@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using DotNetEnv;
-using Microsoft.Extensions.Configuration;
 using System.IO;
 
 namespace server.data
